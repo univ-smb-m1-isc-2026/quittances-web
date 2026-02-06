@@ -1,1 +1,6 @@
 @import 'tailwindcss';
+@plugin "daisyui";
+
+html, body{
+    @apply bg-base-300;
+}
