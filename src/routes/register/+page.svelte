@@ -4,10 +4,15 @@
 
 	const JWT_STORAGE_KEY = 'auth_token';
 
+	let firstName = '';
+	let lastName = '';
 	let email = '';
+	let phone = '';
 	let password = '';
-	let rememberMe = false;
+	let confirmPassword = '';
+	let acceptTerms = false;
 	let showPassword = false;
+	let showConfirmPassword = false;
 	let isSubmitting = false;
 	let errorMessage = '';
 
@@ -15,7 +20,7 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		if (!email || !password) {
+		if (!firstName || !lastName || !email || !password || !confirmPassword) {
 			errorMessage = 'Merci de remplir tous les champs.';
 			return;
 		}
@@ -25,15 +30,25 @@
 			return;
 		}
 
+		if (password !== confirmPassword) {
+			errorMessage = 'Les mots de passe ne correspondent pas.';
+			return;
+		}
+
+		if (!acceptTerms) {
+			errorMessage = 'Vous devez accepter les conditions d\'utilisation.';
+			return;
+		}
+
 		isSubmitting = true;
 
 		try {
-			// Placeholder login flow before integrating a real backend auth API.
+			// Placeholder register flow before integrating a real backend auth API.
 			await new Promise((resolve) => setTimeout(resolve, 600));
 			localStorage.setItem(JWT_STORAGE_KEY, 'demo-jwt-token');
 			await goto(resolve('/dashboard'));
 		} catch {
-			errorMessage = 'Impossible de se connecter pour le moment.';
+			errorMessage = 'Impossible de creer le compte pour le moment.';
 		} finally {
 			isSubmitting = false;
 		}
@@ -54,8 +69,8 @@
 		<div class="w-full max-w-md">
 			<div class="mb-7">
 				<p class="text-sm uppercase tracking-[0.2em] text-base-content/50">Quittances Web</p>
-				<h1 class="text-3xl sm:text-4xl font-bold mt-2">Connexion</h1>
-				<p class="text-base-content/65 mt-2">Accedez a votre tableau de bord pour continuer.</p>
+				<h1 class="text-3xl sm:text-4xl font-bold mt-2">Creer un compte</h1>
+				<p class="text-base-content/65 mt-2">Inscrivez-vous pour generer vos quittances en quelques clics.</p>
 			</div>
 
 			{#if errorMessage}
@@ -65,6 +80,36 @@
 			{/if}
 
 			<form class="flex flex-col gap-4" on:submit={handleSubmit}>
+				<div class="grid sm:grid-cols-2 gap-4">
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Prenom</span>
+						</div>
+						<input
+							type="text"
+							bind:value={firstName}
+							class="input input-bordered w-full"
+							placeholder="Jean"
+							autocomplete="given-name"
+							required
+						/>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Nom</span>
+						</div>
+						<input
+							type="text"
+							bind:value={lastName}
+							class="input input-bordered w-full"
+							placeholder="Dupont"
+							autocomplete="family-name"
+							required
+						/>
+					</label>
+				</div>
+
 				<label class="form-control w-full">
 					<div class="label">
 						<span class="label-text">Adresse email</span>
@@ -80,9 +125,22 @@
 				</label>
 
 				<label class="form-control w-full">
-					<div class="label flex justify-between">
+					<div class="label">
+						<span class="label-text">Téléphone</span>
+					</div>
+					<input
+						type="tel"
+						bind:value={phone}
+						class="input input-bordered w-full"
+						placeholder="06 12 34 56 78"
+						autocomplete="tel"
+						required
+					/>
+				</label>
+
+				<label class="form-control w-full">
+					<div class="label">
 						<span class="label-text">Mot de passe</span>
-						<a href={resolve('/')} class="label-text-alt link link-hover">Mot de passe oublie ?</a>
 					</div>
 
 					<div class="join w-full">
@@ -106,27 +164,53 @@
 					</div>
 				</label>
 
-				<div class="flex items-center justify-between gap-4">
-					<label class="label cursor-pointer gap-3 p-0">
-						<input type="checkbox" bind:checked={rememberMe} class="checkbox checkbox-primary" />
-						<span class="label-text">Se souvenir de moi</span>
-					</label>
-					<a href={resolve('/')} class="link link-primary">Besoin d'aide ?</a>
-				</div>
+				<label class="form-control w-full">
+					<div class="label">
+						<span class="label-text">Confirmer le mot de passe</span>
+					</div>
+
+					<div class="join w-full">
+						<input
+							type={showConfirmPassword ? 'text' : 'password'}
+							bind:value={confirmPassword}
+							class="input input-bordered join-item w-full"
+							placeholder="Retapez votre mot de passe"
+							autocomplete="new-password"
+							minlength="8"
+							required
+						/>
+						<button
+							type="button"
+							class="btn join-item btn-outline"
+							on:click={() => (showConfirmPassword = !showConfirmPassword)}
+							aria-label={showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+						>
+							{showConfirmPassword ? 'Masquer' : 'Afficher'}
+						</button>
+					</div>
+				</label>
+
+				<label class="label cursor-pointer justify-start gap-3 p-0 mt-1">
+					<input type="checkbox" bind:checked={acceptTerms} class="checkbox checkbox-primary" />
+					<span class="label-text">
+						J'accepte les
+						<a href={resolve('/')} class="link link-primary">conditions d'utilisation</a>.
+					</span>
+				</label>
 
 				<button type="submit" class="btn btn-primary w-full" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
-						Connexion...
+						Creation...
 					{:else}
-						Se connecter
+						Creer mon compte
 					{/if}
 				</button>
 			</form>
 
 			<p class="text-sm text-base-content/65 mt-5 text-center">
-				Vous n'avez pas encore de compte ?
-				<a href={resolve('/register')} class="link link-primary">Creer un compte</a>
+				Vous avez deja un compte ?
+				<a href={resolve('/login')} class="link link-primary">Se connecter</a>
 			</p>
 		</div>
 	</section>
