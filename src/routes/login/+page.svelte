@@ -24,7 +24,7 @@
 			errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres.';
 			return;
 		}
-
+		
 		isSubmitting = true;
 
 		try {

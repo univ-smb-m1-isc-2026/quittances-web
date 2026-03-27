@@ -26,9 +26,10 @@ import { jsPDF } from 'jspdf'
  * @property {string} propertyCity
  * @property {number} rent
  * @property {number} charges
- * @property {string} period      - e.g. "février 2026"
- * @property {string} paymentDate - e.g. "01/02/2026"
+ * @property {string} period         - e.g. "février 2026"
+ * @property {string} paymentDate    - e.g. "01/02/2026"
  * @property {string} signatureCity
+ * @property {string} [signatureImage] - optional base64 data URL of signature image
  */
 
 /**
@@ -174,9 +175,21 @@ function buildDoc(data) {
     doc.text(`Fait à ${data.signatureCity}, le ${today}`, margin, y)
     y += 14
     doc.text('Signature du bailleur :', margin, y)
-    // Signature placeholder box
-    doc.setDrawColor(150)
-    doc.rect(margin + 45, y - 5, 60, 20)
+    
+    // Draw signature image if provided, otherwise show placeholder
+    if (data.signatureImage) {
+        try {
+            doc.addImage(data.signatureImage, 'PNG', margin + 45, y - 5, 60, 20)
+        } catch {
+            // Fallback to placeholder if image fails
+            doc.setDrawColor(150)
+            doc.rect(margin + 45, y - 5, 60, 20)
+        }
+    } else {
+        // Signature placeholder box
+        doc.setDrawColor(150)
+        doc.rect(margin + 45, y - 5, 60, 20)
+    }
 
     // ── Pied de page ──────────────────────────────────────────────────────────
     const pageH = doc.internal.pageSize.getHeight()

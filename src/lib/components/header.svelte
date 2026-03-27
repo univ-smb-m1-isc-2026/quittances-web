@@ -39,7 +39,7 @@
 </script>
 
 <header>
-	<div class="navbar bg-base-100 shadow-sm px-2 sm:px-4">
+	<div class="navbar bg-base-100 shadow-sm px-2 sm:px-4 fixed top-0 z-50 w-full">
 		<div class="flex-1 gap-3">
 			<a href={resolve('/')} class="text-sm uppercase tracking-[0.2em] text-base-content/50">Quittances Web</a>
 		</div>
@@ -74,3 +74,4 @@
 		</div>
 	</div>
 </header>
+<div class="h-16"></div>

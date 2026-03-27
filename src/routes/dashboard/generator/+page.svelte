@@ -36,6 +36,38 @@
         signatureCity: ''
     }
 
+    /** @type {string | undefined} */
+    let signatureImage = undefined
+    
+    /** @type {string | null} */
+    let signaturePreview = null
+
+    /**
+     * @param {Event} event
+     */
+    function handleSignatureUpload(event) {
+        const input = /** @type {HTMLInputElement} */ (event.target)
+        const file = input.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                const result = e.target?.result
+                if (typeof result === 'string') {
+                    signatureImage = result
+                    signaturePreview = URL.createObjectURL(file)
+                    refreshPreview()
+                }
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    function clearSignature() {
+        signatureImage = undefined
+        signaturePreview = null
+        refreshPreview()
+    }
+
     function handleGenerate() {
         generateQuittance({
             lessor,
@@ -46,7 +78,8 @@
             charges: parseFloat(payment.charges) || 0,
             period: payment.period,
             paymentDate: payment.paymentDate,
-            signatureCity: payment.signatureCity
+            signatureCity: payment.signatureCity,
+            signatureImage
         })
     }
 
@@ -63,7 +96,8 @@
             charges: parseFloat(payment.charges) || 0,
             period: payment.period,
             paymentDate: payment.paymentDate,
-            signatureCity: payment.signatureCity
+            signatureCity: payment.signatureCity,
+            signatureImage
         }
     }
 
@@ -154,6 +188,35 @@
                     <input class="input input-bordered w-full" bind:value={property.city} on:blur={refreshPreview} placeholder="13001 Marseille" required />
                 </label>
             </div>
+        </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="card bg-base-200 shadow">
+        <div class="card-body space-y-4">
+            <h2 class="card-title text-lg">Signature</h2>
+            <p class="text-sm text-base-content/70">Téléchargez une image PNG de votre signature pour l'inclure dans la quittance</p>
+            <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                on:change={handleSignatureUpload}
+                class="file-input file-input-bordered w-full"
+            />
+            {#if signaturePreview}
+                <div class="space-y-2">
+                    <p class="text-sm font-semibold">Aperçu de la signature :</p>
+                    <div class="border border-base-300 rounded-lg p-2 bg-base-100 flex items-center justify-center max-w-xs">
+                        <img src={signaturePreview} alt="Signature preview" class="max-h-24 max-w-48" />
+                    </div>
+                    <button
+                        type="button"
+                        on:click={clearSignature}
+                        class="btn btn-sm btn-outline btn-error"
+                    >
+                        Supprimer la signature
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 
