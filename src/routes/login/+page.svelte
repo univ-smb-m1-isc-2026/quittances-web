@@ -32,7 +32,16 @@
 				body: JSON.stringify({ email, password })
 			});
 			if (!response.ok) {
-				errorMessage = 'Identifiants invalides';
+				let backendError = 'Identifiants invalides';
+				try {
+					const data = await response.json();
+					if (data?.error) {
+						backendError = data.error;
+					}
+				} catch {
+					// Message par defaut si le backend ne renvoie pas de JSON.
+				}
+				errorMessage = backendError;
 				return;
 			}
 			await invalidateAll();
