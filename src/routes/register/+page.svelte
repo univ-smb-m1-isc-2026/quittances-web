@@ -43,14 +43,27 @@
 		isSubmitting = true;
 
 		try {
-			// Placeholder register flow before integrating a real backend auth API.
-			await new Promise((resolve) => setTimeout(resolve, 600));
-			localStorage.setItem(JWT_STORAGE_KEY, 'demo-jwt-token');
-			await goto(resolve('/dashboard'));
+			const response = await fetch('/register', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					nom: lastName,
+					prenom: firstName,
+					email,
+					telephone: phone,
+					password
+				})
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				errorMessage = data.error || 'Impossible de créer le compte pour le moment.';
+				return;
+			}
+
+			await goto('/dashboard');
 		} catch {
-			errorMessage = 'Impossible de creer le compte pour le moment.';
-		} finally {
-			isSubmitting = false;
+			errorMessage = 'Impossible de créer le compte pour le moment.';
 		}
 	}
 </script>

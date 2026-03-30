@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-
-	const JWT_STORAGE_KEY = 'auth_token';
 
 	let email = '';
 	let password = '';
@@ -24,13 +22,20 @@
 			errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres.';
 			return;
 		}
-		
+
 		isSubmitting = true;
 
 		try {
-			// Placeholder login flow before integrating a real backend auth API.
-			await new Promise((resolve) => setTimeout(resolve, 600));
-			localStorage.setItem(JWT_STORAGE_KEY, 'demo-jwt-token');
+			const response = await fetch('/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, password })
+			});
+			if (!response.ok) {
+				errorMessage = 'Identifiants invalides';
+				return;
+			}
+			await invalidateAll();
 			await goto(resolve('/dashboard'));
 		} catch {
 			errorMessage = 'Impossible de se connecter pour le moment.';
@@ -38,6 +43,7 @@
 			isSubmitting = false;
 		}
 	}
+
 </script>
 
 <main class="min-h-screen grid lg:grid-cols-2 bg-base-200">
@@ -144,3 +150,4 @@
 		</div>
 	</section>
 </main>
+
