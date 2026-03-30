@@ -2,5 +2,12 @@
 @plugin "daisyui";
 
 html, body{
-    @apply bg-base-300;
+    @apply bg-base-100;
+}
+
+.scroll-container::-webkit-scrollbar {
+    display: none;
+}
+.scroll-container {
+    scrollbar-width: none; /* Firefox */
 }

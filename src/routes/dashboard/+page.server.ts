@@ -1,11 +1,10 @@
-import type { PageServerLoad } from './$types';
+import type { ServerLoad } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ cookies }) => {
+export const load: ServerLoad = async ({ cookies }) => {
     const token = cookies.get('auth_token');
     if (!token) {
         throw redirect(302, '/login');
     }
-    // Optionnel : tu peux ajouter ici une vérification du JWT côté serveur
     return {};
 };

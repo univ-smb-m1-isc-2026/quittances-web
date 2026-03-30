@@ -2,8 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
-	const JWT_STORAGE_KEY = 'auth_token';
-
 	let firstName = '';
 	let lastName = '';
 	let email = '';
