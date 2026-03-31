@@ -3,15 +3,35 @@ import { json } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
     const { email, password } = await request.json();
+    const origin = request.headers.get('origin');
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+    };
+
+    // Propagation de l'origine navigateur vers l'API pour passer le filtre backend.
+    if (origin) {
+        headers.Origin = origin;
+    }
 
     const res = await fetch('http://quittances-api:8080/api/proprios/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ email, password })
     });
 
     if (!res.ok) {
-        return json({ error: 'Identifiants invalides' }, { status: 401 });
+        let errorMessage = 'Erreur de connexion';
+        try {
+            const errorBody = await res.text();
+            if (errorBody) {
+                errorMessage = errorBody;
+            }
+        } catch {
+            // On garde le message par defaut.
+        }
+
+        return json({ error: errorMessage }, { status: res.status });
     }
 
     const data = await res.json();
