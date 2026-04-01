@@ -1,24 +1,11 @@
 <script>
     let { propriete } = $props();
-
-    let longitude = $state(0);
-    let latitude = $state(0);
-
-    $effect(() => {
-fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(propriete.adresse + ', ' + propriete.ville + ', ' + propriete.pays)}`)            .then(res => res.json())
-            .then(data => {
-                if (data.length > 0) {
-                    longitude = parseFloat(data[0].lon);
-                    latitude = parseFloat(data[0].lat);
-                }
-            });
-    });
 </script>
 
 <div class="flex flex-col bg-base-100 rounded-lg p-4 border-gray-400 border-1 w-2/3">
     <div class="text-2xl font-bold">Details et Quittance Actuelle</div>
     <div class="flex w-full gap-4">
-        <div class="flex justify-between w-1/3">
+        <div class="flex justify-between w-1/2">
             <div class="flex flex-col divide-y divide-gray-300 [&>div]:py-2 font-medium text-lg
                 [&>div]:flex [&>div]:justify-between w-full
             ">
@@ -28,21 +15,7 @@ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURICompo
                 <div><div>Dépôt</div> <div>{propriete.depot}</div></div>
             </div>
         </div>
-        <div class="w-1/3 flex justify-center items-center">
-            {#if latitude !== 0 && longitude !== 0}
-                <iframe
-                    title="Localisation"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    class="rounded-lg"
-                    src="https://www.openstreetmap.org/export/embed.html?bbox={longitude - 0.01},{latitude - 0.01},{longitude + 0.01},{latitude + 0.01}&layer=mapnik&marker={latitude},{longitude}"
-                />
-            {:else}
-                <div class="text-gray-400 text-sm ">Chargement de la carte…</div>
-            {/if}
-        </div>
-        <div class="flex flex-col justify-between w-1/3">
+        <div class="flex flex-col justify-between w-1/2">
             <div class="flex flex-col divide-y divide-gray-300 [&>div]:py-2 font-medium text-lg
                 [&>div]:flex [&>div]:justify-between w-full
             ">
