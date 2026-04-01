@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let firstName = '';
@@ -59,9 +59,12 @@
 				return;
 			}
 
-			await goto('/dashboard');
+			await invalidateAll();
+			await goto(resolve('/dashboard'));
 		} catch {
 			errorMessage = 'Impossible de créer le compte pour le moment.';
+		} finally {
+			isSubmitting = false;
 		}
 	}
 </script>
