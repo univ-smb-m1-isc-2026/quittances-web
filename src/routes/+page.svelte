@@ -11,10 +11,10 @@
 
 		<div
 			class="border-gray-400 border-y-1 h-30 flex items-center justify-center "
-			style="background: repeating-linear-gradient(135deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 12px);"
+			style="background: repeating-linear-gradient(135deg, var(--color-gray-400) 0 1px, transparent 1px 12px);"
 		>
 
-			<div class="rounded-xl bg-base-300 px-6 py-4 text-black/50 text-4xl font-bold border-gray-400 border-1">
+			<div class="rounded-xl text-gray-400 bg-base-300 px-6 py-4 text-black/50 text-4xl font-bold border-gray-400 border-1">
 				Une solution qui vous ressemble vraiment
 			</div>
 		</div>
