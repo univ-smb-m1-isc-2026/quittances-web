@@ -12,11 +12,20 @@
         [key: string]: unknown;
     };
 
+    type Quittance = {
+        id?: number;
+        periode: string;
+        locataire: string;
+        montant: number;
+        dateEnvoi: string;
+        statut: string;
+    };
+
     let selectedPropriete = $state<Propriete | null>(null);
     let proprieteList = $state<Propriete[]>([]);
     let isLoadingProprietes = $state(true);
     let propertiesError = $state('');
-    let quittances = $state([]);
+    let quittances = $state<Quittance[]>([]);
 
 
     let longitude = $state(0);
@@ -65,7 +74,12 @@
         quittances = []; // reset
         fetch(`/api/quittances?proprieteId=${selectedPropriete.id}`)
             .then(r => r.json())
-            .then(data => quittances = data);
+            .then((data: Quittance[]) => {
+                quittances = Array.isArray(data) ? data : [];
+            })
+            .catch(() => {
+                quittances = [];
+            });
     });
 
 </script>
@@ -138,7 +152,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#each quittances as q}
+                            {#each quittances as q, i (q.id ?? `${q.periode}-${q.dateEnvoi}-${i}`)}
                             <tr class="hover">
                                 <td class="font-medium">{q.periode}</td>
                                 <td class="text-sm">{q.locataire}</td>

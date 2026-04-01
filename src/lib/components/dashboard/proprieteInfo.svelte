@@ -33,9 +33,9 @@
                 <div><div>Status</div> <div>{propriete.quittanceEnCours}</div></div> <!-- quittanceEnCours.status -->
                 
             </div>
-            <a class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">
+            <button type="button" class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">
                 Renvoyez une quittance
-            </a>
+            </button>
         </div>
     </div>
 </div>
