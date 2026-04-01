@@ -2,19 +2,61 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
-    const { email, password } = await request.json();
+    const { nom, prenom, email, telephone, password } = await request.json();
+    const cleanedPhone = String(telephone ?? '').replace(/\D/g, '');
 
-    const res = await fetch('http://quittances-api:8080/api/proprios/login', {
+    if (!nom || !prenom || !email || !password || !cleanedPhone) {
+        return json({ error: 'Champs manquants pour créer le compte.' }, { status: 400 });
+    }
+
+    if (cleanedPhone.length !== 10) {
+        return json({ error: 'Le numéro de téléphone doit contenir 10 chiffres.' }, { status: 400 });
+    }
+    const origin = request.headers.get('origin');
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+    };
+
+    // Forward browser origin so backend origin filter allows server-side requests.
+    if (origin) {
+        headers.Origin = origin;
+    }
+
+    const createRes = await fetch('http://quittances-api:8080/api/proprios', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        body: JSON.stringify({ nom, prenom, email, telephone: cleanedPhone, password })
+    });
+
+    if (!createRes.ok) {
+        let errorMessage = 'Impossible de créer le compte pour le moment.';
+        try {
+            const errorBody = await createRes.text();
+            if (errorBody) {
+                errorMessage = errorBody;
+            }
+        } catch {
+            // Keep default message.
+        }
+
+        return json({ error: errorMessage }, { status: createRes.status });
+    }
+
+    const loginRes = await fetch('http://quittances-api:8080/api/proprios/login', {
+        method: 'POST',
+        headers,
         body: JSON.stringify({ email, password })
     });
 
-    if (!res.ok) {
-        return json({ error: 'Identifiants invalides' }, { status: 401 });
+    if (!loginRes.ok) {
+        return json(
+            { error: 'Compte créé, mais la connexion automatique a échoué.' },
+            { status: loginRes.status }
+        );
     }
 
-    const data = await res.json();
+    const data = await loginRes.json();
 
     cookies.set('auth_token', data.token, {
         path: '/',
