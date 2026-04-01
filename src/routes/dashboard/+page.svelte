@@ -3,7 +3,7 @@
     import ProprieteInfo from "$lib/components/dashboard/proprieteInfo.svelte";
 
     let selectedPropriete = $state(null);
-        let quittances = $state([]);
+    let quittances = $state([null]);
 
 
     let longitude = $state(0);
