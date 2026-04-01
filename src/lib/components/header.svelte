@@ -13,7 +13,7 @@
 </script>
 
 <header>
-	<div class="navbar bg-base-100 px-2 sm:px-4 fixed top-0 z-50 w-full grid grid-cols-3 items-center text-base-content ">
+	<div class="navbar bg-base-100 px-8 fixed top-0 z-50 w-full grid grid-cols-3 items-center text-base-content ">
 		<!-- Colonne gauche -->
 		<a href={resolve('/')} class="flex gap-2 items-end">
 			<div class="gap-3 bg-primary rounded-lg p-2">
@@ -59,22 +59,11 @@
 					</ul>
 				</div>
 			{:else}
-				<a href={resolve('/register')} class="border-1 border-gray-400 text-gray-600 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">Inscription</a>
+				<a href={resolve('/register')} class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">Inscription</a>
 				<a href={resolve('/login')} class="bg-primary py-1 px-2 text-primary-content rounded-md font-semibold hover:bg-primary/70 transition-colors">Connexion</a>
 			{/if}
 		</div>
 	</div>
-
-	<!-- <div class="fixed top-16 left-4 w-[calc(100%-2rem)] h-16 z-50 flex items-start justify-between">
-		<svg class="w-4 h-4" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path d="M50 0C22.3858 0 0 22.3858 0 50V0H50Z" fill="var(--color-base-100)" />
-		</svg>
-
-		<svg class="w-4 h-4 rotate-90" width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path d="M50 0C22.3858 0 0 22.3858 0 50V0H50Z" fill="var(--color-base-100)"/>
-		</svg>
-	</div> -->
-
 </header>
 
 <div class="h-16"></div>
