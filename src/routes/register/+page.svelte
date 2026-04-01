@@ -13,18 +13,39 @@
 	let showConfirmPassword = false;
 	let isSubmitting = false;
 	let errorMessage = '';
+	let hasSubmitted = false;
+
+	$: trimmedEmail = email.trim();
+	$: emailError =
+		!trimmedEmail
+			? ''
+			: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
+				? ''
+				: 'Veuillez saisir une adresse email valide.';
+
+	$: phoneDigits = phone.replace(/\D/g, '');
+	$: phoneError =
+		!phone
+			? ''
+			: phoneDigits.length !== 10
+				? 'Le numero de telephone doit contenir exactement 10 chiffres.'
+				: '';
+
+	$: passwordError =
+		!password ? '' : password.length < 8 ? 'Le mot de passe doit contenir au moins 8 caracteres.' : '';
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		errorMessage = '';
+		hasSubmitted = true;
 
 		if (!firstName || !lastName || !email || !password || !confirmPassword) {
 			errorMessage = 'Merci de remplir tous les champs.';
 			return;
 		}
 
-		if (password.length < 8) {
-			errorMessage = 'Le mot de passe doit contenir au moins 8 caracteres.';
+		if (emailError || phoneError || passwordError) {
+			errorMessage = 'Veuillez corriger les champs en erreur.';
 			return;
 		}
 
@@ -136,6 +157,9 @@
 						autocomplete="email"
 						required
 					/>
+					{#if emailError && (hasSubmitted || trimmedEmail.length > 0)}
+						<p class="text-error text-xs mt-1">{emailError}</p>
+					{/if}
 				</label>
 
 				<label class="form-control w-full">
@@ -150,6 +174,9 @@
 						autocomplete="tel"
 						required
 					/>
+					{#if phoneError && (hasSubmitted || phone.length > 0)}
+						<p class="text-error text-xs mt-1">{phoneError}</p>
+					{/if}
 				</label>
 
 				<label class="form-control w-full">
@@ -176,6 +203,9 @@
 							{showPassword ? 'Masquer' : 'Afficher'}
 						</button>
 					</div>
+					{#if passwordError && (hasSubmitted || password.length > 0)}
+						<p class="text-error text-xs mt-1">{passwordError}</p>
+					{/if}
 				</label>
 
 				<label class="form-control w-full">
