@@ -1,76 +1,48 @@
-<script>
+<script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import FormAddPropriete from './FormAddPropriete.svelte';
 
-    let proprieteList = [
-        {
-            id: 1,
-            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJGG3scjreflg1MpNXasD6QKorkr71acjmIoUIAORphrlpXqmrBv_cTFw4ttXAApyU07THdCDrQ_SP0T6WKhUqIqyKAVjcpD0cuB6MHbAIQw&s=10",
-            nom: "Propriété 1",
-            adresse: "444 Rue des Jonquilles",
-            ville: "Le Cheylas",
-            pays: "France",
-            locataire: "ntm va"
-        },
-        {
-            id: 2,
-            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJGG3scjreflg1MpNXasD6QKorkr71acjmIoUIAORphrlpXqmrBv_cTFw4ttXAApyU07THdCDrQ_SP0T6WKhUqIqyKAVjcpD0cuB6MHbAIQw&s=10",
-            nom: "Propriété 2",
-            adresse: "49 Rue Du Rhône",
-            ville: "Chambery",
-            pays: "France",
-            locataire: "nathan roi"
-        },
-        {
-            id: 3,
-            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJGG3scjreflg1MpNXasD6QKorkr71acjmIoUIAORphrlpXqmrBv_cTFw4ttXAApyU07THdCDrQ_SP0T6WKhUqIqyKAVjcpD0cuB6MHbAIQw&s=10",
-            nom: "Propriété 3",
-            adresse: "789 Boulevard Tertiaire",
-            ville: "Ville",
-            pays: "Pays",
-            locataire: "Timéo le beau gosse"
-        },
-        {
-            id: 4,
-            image: "https://via.placeholder.com/150?text=Maison+4",
-            nom: "Propriété 4",
-            adresse: "12 Rue des Lilas",
-            ville: "Paris",
-            pays: "France",
-            locataire: "locataire 4"
-        },
-        {
-            id: 5,
-            image: "https://via.placeholder.com/150?text=Maison+5",
-            nom: "Propriété 5",
-            adresse: "34 Avenue des Champs",
-            ville: "Lyon",
-            pays: "France",
-            locataire: "locataire 5"
-        },
-        {
-            id: 6,
-            image: "https://via.placeholder.com/150?text=Maison+6",
-            nom: "Propriété 6",
-            adresse: "56 Boulevard Voltaire",
-            ville: "Marseille",
-            pays: "France",
-            locataire: "locataire 6"
-        },
-        {
-            id: 7,
-            image: "https://via.placeholder.com/150?text=Maison+7",
-            nom: "Propriété 7",
-            adresse: "78 Rue de la Paix",
-            ville: "Nice",
-            pays: "France",
-            locataire: "locataire 7"
+    type Propriete = {
+        id: number;
+        adresse: string;
+        ville: string;
+        pays: string;
+        image?: string | null;
+        [key: string]: unknown;
+    };
+
+    let {
+        proprieteList = [],
+        isLoading = false
+    }: { proprieteList: Propriete[]; isLoading: boolean } = $props();
+
+    let collapsed = $state(false);
+    let selectedId = $state<number | null>(null);
+    const dispatch = createEventDispatcher<{ select: { id: Propriete }; propertyCreated: void }>();
+
+    let showCreateModal = $state(false);
+
+    $effect(() => {
+        const selectedExists = proprieteList.some((p) => p.id === selectedId);
+        if (!selectedExists) {
+            selectedId = proprieteList.length > 0 ? proprieteList[0].id : null;
+            if (selectedId !== null) {
+                const first = proprieteList.find((p) => p.id === selectedId);
+                if (first) {
+                    dispatch('select', { id: first });
+                }
+            }
         }
-    ];
+    });
 
-    let collapsed = false;
-    /** @type {number|null} */
-    let selectedId = proprieteList[0].id;
-    const dispatch = createEventDispatcher();
+    function handlePropertyCreated(event: CustomEvent<{ property: Propriete }>) {
+        showCreateModal = false;
+        dispatch('propertyCreated');
+        if (event.detail?.property) {
+            selectedId = event.detail.property.id;
+            dispatch('select', { id: event.detail.property });
+        }
+    }
 </script>
 
 <div class="flex flex-col h-full bg-base-100 gap-2 p-2 transition-[width] duration-300 ease-in-out overflow-hidden {collapsed ? 'w-18' : 'w-1/4'}">
@@ -78,7 +50,7 @@
     <!-- Header -->
     <div class="flex items-center flex-shrink-0 h-13">
         <button
-            on:click={() => collapsed = !collapsed}
+            onclick={() => collapsed = !collapsed}
             class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0 h-13 w-13 flex items-center justify-center"
             aria-label={collapsed ? 'Ouvrir' : 'Réduire'}
         >
@@ -96,6 +68,12 @@
 
     <!-- Liste -->
     <ul class="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {#if isLoading}
+            <li class="text-sm text-gray-500 px-2 py-3">Chargement des propriétés...</li>
+        {:else if proprieteList.length === 0}
+            <li class="text-sm text-gray-500 px-2 py-3">Aucune propriété pour le moment.</li>
+        {/if}
+
         {#each proprieteList as propriete (propriete.id)}
             <button
                 type="button"
@@ -103,13 +81,13 @@
                     {collapsed ? 'w-13' : 'w-full gap-2'}
                     {selectedId === propriete.id ? 'bg-primary text-primary-content' : 'bg-base-300 hover:bg-gray-100'}"
                 title={collapsed ? `${propriete.adresse} — ${propriete.ville}` : ''}
-                on:click={() => { selectedId = propriete.id; dispatch('select', { id: propriete }); }}
+                onclick={() => { selectedId = propriete.id; dispatch('select', { id: propriete }); }}
                 aria-pressed={selectedId === propriete.id}
             >
                 <div class="relative h-13 w-13 flex-shrink-0">
                     <img
-                        src={propriete.image}
-                        alt={propriete.nom}
+                        src={propriete.image || 'https://via.placeholder.com/150?text=Propriete'}
+                        alt={propriete.adresse}
                         class="h-13 w-13 object-cover rounded-l-lg"
                     />
                     {#if collapsed && selectedId === propriete.id}
@@ -127,7 +105,11 @@
     </ul>
 
     <!-- Bouton ajout -->
-    <button class="flex items-center justify-center h-13 rounded-xl bg-primary text-primary-content font-bold shadow-md hover:bg-primary/90 transition-colors cursor-pointer text-base flex-shrink-0 overflow-hidden">
+    <button
+        type="button"
+        onclick={() => (showCreateModal = true)}
+        class="flex items-center justify-center h-13 rounded-xl bg-primary text-primary-content font-bold shadow-md hover:bg-primary/90 transition-colors cursor-pointer text-base flex-shrink-0 overflow-hidden"
+    >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-5 h-5 fill-primary-content flex-shrink-0">
             <path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM232 344l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/>
         </svg>
@@ -137,3 +119,9 @@
     </button>
 
 </div>
+
+<FormAddPropriete
+    open={showCreateModal}
+    on:close={() => (showCreateModal = false)}
+    on:created={handlePropertyCreated}
+/>

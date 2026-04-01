@@ -1,11 +1,51 @@
-<script>
+<script lang="ts">
+    import { onMount } from 'svelte';
     import ListPropriete from "$lib/components/dashboard/listPropriete.svelte";
     import ProprieteInfo from "$lib/components/dashboard/proprieteInfo.svelte";
 
-    let selectedPropriete = $state(null);
+    type Propriete = {
+        id: number;
+        adresse: string;
+        ville: string;
+        pays: string;
+        image?: string | null;
+        [key: string]: unknown;
+    };
+
+    let selectedPropriete = $state<Propriete | null>(null);
+    let proprieteList = $state<Propriete[]>([]);
+    let isLoadingProprietes = $state(true);
+    let propertiesError = $state('');
 
     let longitude = $state(0);
     let latitude = $state(0);
+
+    async function loadProprietes() {
+        isLoadingProprietes = true;
+        propertiesError = '';
+
+        try {
+            const response = await fetch('/dashboard/proprietes');
+            const data = await response.json() as { error?: string; properties?: Propriete[] };
+
+            if (!response.ok) {
+                propertiesError = data.error ?? 'Impossible de charger les propriétés.';
+                proprieteList = [];
+                return;
+            }
+
+            proprieteList = data.properties ?? [];
+        } catch {
+            propertiesError = 'Impossible de charger les propriétés.';
+            proprieteList = [];
+        } finally {
+            isLoadingProprietes = false;
+        }
+    }
+
+    onMount(async () => {
+        await loadProprietes();
+    });
 
     $effect(() => {
         if (!selectedPropriete?.adresse) return;
@@ -22,8 +62,19 @@
 </script>
 
 <div class="flex h-[calc(100vh-4rem)]">
-    <ListPropriete on:select={e => selectedPropriete = e.detail.id}/>
+    <ListPropriete
+        proprieteList={proprieteList}
+        isLoading={isLoadingProprietes}
+        on:select={(e: CustomEvent<{ id: Propriete }>) => selectedPropriete = e.detail.id}
+        on:propertyCreated={loadProprietes}
+    />
     <div class="border-l border-t border-gray-400 h-full w-full rounded-tl-xl p-6 bg-base-300">
+        {#if propertiesError}
+            <div class="mb-4 rounded-md border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
+                {propertiesError}
+            </div>
+        {/if}
+
         {#if selectedPropriete}
             <div class="text-4xl font-bold mb-6">
                 Tableau de bord - {selectedPropriete.adresse}, {selectedPropriete.ville}, {selectedPropriete.pays}
@@ -40,7 +91,7 @@
                             frameborder="0"
                             class="rounded-lg"
                             src="https://www.openstreetmap.org/export/embed.html?bbox={longitude - 0.01},{latitude - 0.01},{longitude + 0.01},{latitude + 0.01}&layer=mapnik&marker={latitude},{longitude}"
-                        />
+                        ></iframe>
                     {:else}
                         <div class="flex items-center justify-center h-full text-gray-400 text-sm">
                             Chargement de la carte…

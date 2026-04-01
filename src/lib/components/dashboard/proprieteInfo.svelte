@@ -10,7 +10,16 @@
                 [&>div]:flex [&>div]:justify-between w-full
             ">
                 <div><div>Statut</div> <div>{propriete.statut}</div></div>
-                <div><div>Locataire</div> <div>{propriete.locataire}</div></div>
+                <div>
+                    <div>Locataire</div>
+                    <div>
+                        {#if propriete.locataire?.prenom || propriete.locataire?.nom}
+                            {propriete.locataire?.prenom ?? ''} {propriete.locataire?.nom ?? ''}
+                        {:else}
+                            Non renseigné
+                        {/if}
+                    </div>
+                </div>
                 <div><div>Loyer</div> <div>{propriete.loyer}</div></div>
                 <div><div>Dépôt</div> <div>{propriete.depot}</div></div>
             </div>
