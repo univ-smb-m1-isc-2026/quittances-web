@@ -1,71 +1,44 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { apiUrl } from '$lib/server/api';
+import { type ApiEnvelope, buildApiHeaders, proxyApiJson, setAuthCookie } from '$lib/server/route-utils';
 
 export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
     const { nom, prenom, email, telephone, password } = await request.json();
     const cleanedPhone = String(telephone ?? '').replace(/\D/g, '');
 
     if (!nom || !prenom || !email || !password || !cleanedPhone) {
-        return json({ error: 'Champs manquants pour créer le compte.' }, { status: 400 });
+        return json({ data: null, state: '[ERROR] Champs manquants pour creer le compte.' }, {
+            status: 400
+        });
     }
 
     if (cleanedPhone.length !== 10) {
-        return json({ error: 'Le numéro de téléphone doit contenir 10 chiffres.' }, { status: 400 });
-    }
-    const origin = request.headers.get('origin');
-
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-    };
-
-    // Forward browser origin so backend origin filter allows server-side requests.
-    if (origin) {
-        headers.Origin = origin;
+        return json({ data: null, state: '[ERROR] Le numero de telephone doit contenir 10 chiffres.' }, { status: 400 });
     }
 
-    const createRes = await fetch(apiUrl('/api/proprios'), {
+    const headers = buildApiHeaders(request.headers.get('origin'));
+
+    const { payload: createRawPayload, status: createStatus } = await proxyApiJson(fetch, '/api/proprios', {
         method: 'POST',
         headers,
         body: JSON.stringify({ nom, prenom, email, telephone: cleanedPhone, password })
     });
 
-    if (!createRes.ok) {
-        let errorMessage = 'Impossible de créer le compte pour le moment.';
-        try {
-            const errorBody = await createRes.text();
-            if (errorBody) {
-                errorMessage = errorBody;
-            }
-        } catch {
-            // Keep default message.
-        }
-
-        return json({ error: errorMessage }, { status: createRes.status });
+    const createPayload = createRawPayload as ApiEnvelope<Record<string, unknown> | null>;
+    if (createStatus < 200 || createStatus >= 300) {
+        return json(createPayload, { status: createStatus });
     }
 
-    const loginRes = await fetch(apiUrl('/api/proprios/login'), {
+    const { payload: loginRawPayload, status: loginStatus } = await proxyApiJson(fetch, '/api/proprios/login', {
         method: 'POST',
         headers,
         body: JSON.stringify({ email, password })
     });
 
-    if (!loginRes.ok) {
-        return json(
-            { error: 'Compte créé, mais la connexion automatique a échoué.' },
-            { status: loginRes.status }
-        );
+    const loginPayload = loginRawPayload as ApiEnvelope<{ token?: string } | null>;
+    if (loginStatus >= 200 && loginStatus < 300 && loginPayload?.data?.token) {
+        setAuthCookie(cookies, loginPayload.data.token);
     }
 
-    const data = await loginRes.json();
-
-    cookies.set('auth_token', data.token, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 60 * 60 * 24
-    });
-
-    return json({ success: true });
+    return json(loginPayload, { status: loginStatus });
 };

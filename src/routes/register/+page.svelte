@@ -15,6 +15,11 @@
 	let errorMessage = '';
 	let hasSubmitted = false;
 
+	type ApiEnvelope<T> = {
+		data: T;
+		state: string;
+	};
+
 	$: trimmedEmail = email.trim();
 	$: emailError =
 		!trimmedEmail
@@ -75,8 +80,8 @@
 			});
 
 			if (!response.ok) {
-				const data = await response.json();
-				errorMessage = data.error || 'Impossible de créer le compte pour le moment.';
+				const payload = await response.json() as ApiEnvelope<unknown>;
+				errorMessage = payload?.state || '[ERROR] Impossible de creer le compte pour le moment.';
 				return;
 			}
 

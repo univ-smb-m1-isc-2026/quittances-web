@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { redirect } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ cookies }) => {
     cookies.delete('auth_token', { path: '/' });
-    throw redirect(302, '/');
+    return json({ data: { loggedOut: true }, state: '[SUCCESS] Deconnexion reussie' });
 };

@@ -9,6 +9,11 @@
 	let isSubmitting = false;
 	let errorMessage = '';
 
+	type ApiEnvelope<T> = {
+		data: T;
+		state: string;
+	};
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		errorMessage = '';
@@ -31,17 +36,9 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password })
 			});
+			const payload = await response.json() as ApiEnvelope<unknown>;
 			if (!response.ok) {
-				let backendError = 'Identifiants invalides';
-				try {
-					const data = await response.json();
-					if (data?.error) {
-						backendError = data.error;
-					}
-				} catch {
-					// Message par defaut si le backend ne renvoie pas de JSON.
-				}
-				errorMessage = backendError;
+				errorMessage = payload?.state || '[ERROR] Identifiants invalides';
 				return;
 			}
 			await invalidateAll();

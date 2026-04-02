@@ -10,6 +10,11 @@
         telephone: string;
     };
 
+    type ApiEnvelope<T> = {
+        data: T;
+        state: string;
+    };
+
     let { open = false }: { open?: boolean } = $props();
 
     const dispatch = createEventDispatcher<{
@@ -74,15 +79,15 @@
                 })
             });
 
-            const data = await response.json() as { error?: string; locataire?: Locataire };
+            const payload = await response.json() as ApiEnvelope<Locataire | null>;
 
-            if (!response.ok || !data.locataire) {
-                errorMessage = data.error ?? 'Impossible de créer le locataire.';
+            if (!response.ok || !payload.data) {
+                errorMessage = payload.state ?? '[ERROR] Impossible de creer le locataire.';
                 return;
             }
 
             resetForm();
-            dispatch('created', { locataire: data.locataire });
+            dispatch('created', { locataire: payload.data });
         } catch {
             errorMessage = 'Impossible de créer le locataire pour le moment.';
         } finally {

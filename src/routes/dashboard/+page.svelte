@@ -21,6 +21,11 @@
         statut: string;
     };
 
+    type ApiEnvelope<T> = {
+        data: T;
+        state: string;
+    };
+
     let selectedPropriete = $state<Propriete | null>(null);
     let proprieteList = $state<Propriete[]>([]);
     let isLoadingProprietes = $state(true);
@@ -37,15 +42,18 @@
 
         try {
             const response = await fetch('/dashboard/proprietes');
-            const data = await response.json() as { error?: string; properties?: Propriete[] };
+            const payload = await response.json() as ApiEnvelope<Propriete[] | null>;
 
             if (!response.ok) {
-                propertiesError = data.error ?? 'Impossible de charger les propriétés.';
+                propertiesError = payload.state ?? '[ERROR] Impossible de charger les proprietes.';
                 proprieteList = [];
                 return;
             }
 
-            proprieteList = data.properties ?? [];
+            proprieteList = payload.data ?? [];
+            if (payload.state.startsWith('[INFO]')) {
+                propertiesError = payload.state;
+            }
         } catch {
             propertiesError = 'Impossible de charger les propriétés.';
             proprieteList = [];

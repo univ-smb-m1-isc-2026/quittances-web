@@ -19,6 +19,11 @@
         [key: string]: unknown;
     };
 
+    type ApiEnvelope<T> = {
+        data: T;
+        state: string;
+    };
+
     let { open = false }: { open?: boolean } = $props();
 
     const dispatch = createEventDispatcher<{
@@ -96,16 +101,16 @@
         isLoadingLocataires = true;
         try {
             const response = await fetch('/dashboard/locataires');
-            const data = await response.json() as { error?: string; locataires?: Locataire[] };
+            const payload = await response.json() as ApiEnvelope<Locataire[] | null>;
 
             if (!response.ok) {
-                createError = data.error ?? 'Impossible de charger les locataires.';
+                createError = payload.state ?? '[ERROR] Impossible de charger les locataires.';
                 return;
             }
 
-            locataireList = data.locataires ?? [];
+            locataireList = payload.data ?? [];
             if (locataireList.length === 0) {
-                createError = 'Aucun locataire disponible. Créez d\'abord un locataire.';
+                createError = payload.state || '[INFO] Aucun locataire en bdd';
             }
         } catch {
             createError = 'Impossible de charger les locataires.';
@@ -155,15 +160,15 @@
                 })
             });
 
-            const data = await response.json() as { error?: string; property?: Propriete };
+            const payload = await response.json() as ApiEnvelope<Propriete | null>;
 
-            if (!response.ok || !data.property) {
-                createError = data.error ?? 'Impossible de créer la propriété.';
+            if (!response.ok || !payload.data) {
+                createError = payload.state ?? '[ERROR] Impossible de creer la propriete.';
                 return;
             }
 
             resetCreateForm();
-            dispatch('created', { property: data.property });
+            dispatch('created', { property: payload.data });
         } catch {
             createError = 'Impossible de créer la propriété pour le moment.';
         } finally {
