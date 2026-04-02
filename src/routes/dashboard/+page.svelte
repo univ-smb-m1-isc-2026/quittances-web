@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import ListPropriete from "$lib/components/dashboard/listPropriete.svelte";
     import ProprieteInfo from "$lib/components/dashboard/proprieteInfo.svelte";
+    import FormPropriete from '$lib/components/dashboard/FormPropriete.svelte';
 
     type Propriete = {
         id: number;
@@ -31,6 +32,7 @@
     let isLoadingProprietes = $state(true);
     let propertiesError = $state('');
     let quittances = $state<Quittance[]>([]);
+    let showEditModal = $state(false);
 
 
     let longitude = $state(0);
@@ -60,6 +62,21 @@
         } finally {
             isLoadingProprietes = false;
         }
+    }
+
+    function openEditModal() {
+        if (!selectedPropriete) return;
+        showEditModal = true;
+    }
+
+    function closeEditModal() {
+        showEditModal = false;
+    }
+
+    function handlePropertyUpdated(event: CustomEvent<{ property: Propriete }>) {
+        const updatedProperty = event.detail.property;
+        proprieteList = proprieteList.map((p) => p.id === updatedProperty.id ? updatedProperty : p);
+        selectedPropriete = updatedProperty;
     }
 
     onMount(async () => {
@@ -113,7 +130,7 @@
                 <div class="text-4xl font-bold">
                     Tableau de bord - {selectedPropriete.adresse}, {selectedPropriete.ville}, {selectedPropriete.pays}
                 </div>
-                <button class="btn btn-outline btn-sm gap-2 border-gray-400 text-gray-500 hover:bg-gray-400 hover:text-base-100 hover:border-gray-400">
+                <button class="btn btn-outline btn-sm gap-2 border-gray-400 text-gray-500 hover:bg-gray-400 hover:text-base-100 hover:border-gray-400" onclick={openEditModal}>
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
@@ -198,3 +215,11 @@
         {/if}
     </div>
 </div>
+
+<FormPropriete
+    open={showEditModal}
+    mode="edit"
+    propriete={selectedPropriete}
+    on:close={closeEditModal}
+    on:saved={handlePropertyUpdated}
+/>

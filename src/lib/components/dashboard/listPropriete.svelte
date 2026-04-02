@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import FormAddPropriete from './FormAddPropriete.svelte';
+    import FormPropriete from './FormPropriete.svelte';
 
     type Propriete = {
         id: number;
@@ -35,7 +35,7 @@
         }
     });
 
-    function handlePropertyCreated(event: CustomEvent<{ property: Propriete }>) {
+    function handlePropertySaved(event: CustomEvent<{ property: Propriete }>) {
         showCreateModal = false;
         dispatch('propertyCreated');
         if (event.detail?.property) {
@@ -120,8 +120,9 @@
 
 </div>
 
-<FormAddPropriete
+<FormPropriete
     open={showCreateModal}
+    mode="create"
     on:close={() => (showCreateModal = false)}
-    on:created={handlePropertyCreated}
+    on:saved={handlePropertySaved}
 />
