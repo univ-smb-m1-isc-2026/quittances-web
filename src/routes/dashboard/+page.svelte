@@ -3,6 +3,7 @@
     import ListPropriete from "$lib/components/dashboard/listPropriete.svelte";
     import ProprieteInfo from "$lib/components/dashboard/proprieteInfo.svelte";
     import FormPropriete from '$lib/components/dashboard/FormPropriete.svelte';
+    import ConfirmDelete from '$lib/components/dashboard/ConfirmDelete.svelte';
 
     type Propriete = {
         id: number;
@@ -33,6 +34,8 @@
     let propertiesError = $state('');
     let quittances = $state<Quittance[]>([]);
     let showEditModal = $state(false);
+    let showDeleteModal = $state(false);
+    let isDeletingPropriete = $state(false);
 
 
     let longitude = $state(0);
@@ -71,6 +74,49 @@
 
     function closeEditModal() {
         showEditModal = false;
+    }
+
+    function openDeleteModal() {
+        if (!selectedPropriete) return;
+        showDeleteModal = true;
+    }
+
+    function closeDeleteModal() {
+        if (isDeletingPropriete) return;
+        showDeleteModal = false;
+    }
+
+    async function deleteProperty() {
+        if (!selectedPropriete?.id) {
+            return;
+        }
+
+        isDeletingPropriete = true;
+        propertiesError = '';
+
+        try {
+            const response = await fetch('/dashboard/proprietes', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedPropriete.id })
+            });
+
+            const payload = await response.json() as ApiEnvelope<null>;
+
+            if (!response.ok) {
+                propertiesError = payload.state ?? '[ERROR] Impossible de supprimer la propriete.';
+                return;
+            }
+
+            const deletedId = selectedPropriete.id;
+            proprieteList = proprieteList.filter((p) => p.id !== deletedId);
+            selectedPropriete = proprieteList.length > 0 ? proprieteList[0] : null;
+            showDeleteModal = false;
+        } catch {
+            propertiesError = 'Impossible de supprimer la propriété pour le moment.';
+        } finally {
+            isDeletingPropriete = false;
+        }
     }
 
     function handlePropertyUpdated(event: CustomEvent<{ property: Propriete }>) {
@@ -130,12 +176,20 @@
                 <div class="text-4xl font-bold">
                     Tableau de bord - {selectedPropriete.adresse}, {selectedPropriete.ville}, {selectedPropriete.pays}
                 </div>
-                <button class="btn btn-outline btn-sm gap-2 border-gray-400 text-gray-500 hover:bg-gray-400 hover:text-base-100 hover:border-gray-400" onclick={openEditModal}>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    Modifier
-                </button>
+                <div class="flex items-center gap-2">
+                    <button class="btn btn-outline btn-sm gap-2 border-gray-400 text-gray-500 hover:bg-gray-400 hover:text-base-100 hover:border-gray-400" onclick={openEditModal}>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Modifier
+                    </button>
+                    <button class="btn btn-sm btn-error text-white" onclick={openDeleteModal}>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7.5 1.5L6.75 2.25H3V3.75H3.75V15C3.75 15.3917 3.8935 15.791 4.17627 16.0737C4.45904 16.3565 4.85833 16.5 5.25 16.5H12.75C13.1417 16.5 13.541 16.3565 13.8237 16.0737C14.1065 15.791 14.25 15.3917 14.25 15V3.75H15V2.25H11.25L10.5 1.5H7.5ZM5.25 3.75H12.75V15H5.25V3.75ZM6.75 5.25V13.5H8.25V5.25H6.75ZM9.75 5.25V13.5H11.25V5.25H9.75Z" fill="#D1DBFF"/>
+                        </svg>
+                        Supprimer
+                    </button>
+                </div>
             </div>
 
             <div class="flex gap-6 w-full shrink-0">
@@ -222,4 +276,12 @@
     propriete={selectedPropriete}
     on:close={closeEditModal}
     on:saved={handlePropertyUpdated}
+/>
+
+<ConfirmDelete
+    open={showDeleteModal}
+    title="Supprimer la propriete"
+    message="Cette action est irreversible. Voulez-vous vraiment supprimer cette propriete ?"
+    on:close={closeDeleteModal}
+    on:confirm={deleteProperty}
 />
