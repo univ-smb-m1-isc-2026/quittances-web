@@ -84,11 +84,8 @@
             .then(r => r.json())
             .then((payload) => {
                 const data = payload.data || [];
-                console.log("Toutes les quittances retournées par l'API :", data);
-                console.log("ID de la propriété sélectionnée :", selectedPropriete?.id);
                 // On filtre les quittances pour ne garder que celles de la propriété sélectionnée
-                quittances = Array.isArray(data) ? data.filter((q: any) => Number(q.propriete?.id) === Number(selectedPropriete?.id)) : [];
-                console.log("Quittances après filtrage :", quittances);
+                quittances = Array.isArray(data) ? data.filter((q: Quittance) => Number(q.propriete?.id) === Number(selectedPropriete?.id)) : [];
             })
             .catch(() => {
                 quittances = [];
