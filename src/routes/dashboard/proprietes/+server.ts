@@ -1,5 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
+import { apiUrl } from '$lib/server/api';
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
     try {
@@ -42,7 +43,7 @@ export const GET: RequestHandler = async ({ cookies, fetch, request }) => {
         return json({ error: 'Token invalide' }, { status: 401 });
     }
 
-    const response = await fetch(`http://quittances-api:8080/api/proprietes/${ownerId}`, {
+    const response = await fetch(apiUrl(`/api/proprietes/${ownerId}`), {
         method: 'GET',
         headers: buildHeaders(request.headers.get('origin'))
     });
@@ -70,7 +71,7 @@ export const POST: RequestHandler = async ({ cookies, fetch, request }) => {
 
     const body = await request.json();
 
-    const apiResponse = await fetch('http://quittances-api:8080/api/proprietes', {
+    const apiResponse = await fetch(apiUrl('/api/proprietes'), {
         method: 'POST',
         headers: buildHeaders(request.headers.get('origin')),
         body: JSON.stringify({

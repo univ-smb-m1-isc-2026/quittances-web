@@ -1,5 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
+import { apiUrl } from '$lib/server/api';
 
 export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
     const { email, password } = await request.json();
@@ -14,7 +15,7 @@ export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
         headers.Origin = origin;
     }
 
-    const res = await fetch('http://quittances-api:8080/api/proprios/login', {
+    const res = await fetch(apiUrl('/api/proprios/login'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ email, password })

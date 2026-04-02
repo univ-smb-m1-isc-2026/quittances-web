@@ -1,5 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
+import { apiUrl } from '$lib/server/api';
 
 export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
     const { nom, prenom, email, telephone, password } = await request.json();
@@ -23,7 +24,7 @@ export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
         headers.Origin = origin;
     }
 
-    const createRes = await fetch('http://quittances-api:8080/api/proprios', {
+    const createRes = await fetch(apiUrl('/api/proprios'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ nom, prenom, email, telephone: cleanedPhone, password })
@@ -43,7 +44,7 @@ export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
         return json({ error: errorMessage }, { status: createRes.status });
     }
 
-    const loginRes = await fetch('http://quittances-api:8080/api/proprios/login', {
+    const loginRes = await fetch(apiUrl('/api/proprios/login'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ email, password })
