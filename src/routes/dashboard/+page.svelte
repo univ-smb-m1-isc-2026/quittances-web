@@ -15,7 +15,7 @@
     type Quittance = {
         id?: number;
         period: string;
-        tenant: { nom: string; prenom: string } | null;
+        locataire: { nom: string; prenom: string } | null;
         propriete: { id: number; loyer: number; charges: number } | null;
         paymentDate: string;
         statut: string | null; // Tu ajusteras selon comment tu gères l'état côté appli (ex "envoyée")
@@ -101,7 +101,7 @@
         on:select={(e: CustomEvent<{ id: Propriete }>) => selectedPropriete = e.detail.id}
         on:propertyCreated={loadProprietes}
     />
-    <div class="border-l border-t border-gray-400 h-full w-full rounded-tl-xl p-6 bg-base-300">
+    <div class="border-l border-t border-gray-400 h-full w-full rounded-tl-xl p-6 bg-base-300 flex flex-col">
         {#if propertiesError}
             <div class="mb-4 rounded-md border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
                 {propertiesError}
@@ -109,7 +109,7 @@
         {/if}
 
         {#if selectedPropriete}
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-6 shrink-0">
                 <div class="text-4xl font-bold">
                     Tableau de bord - {selectedPropriete.adresse}, {selectedPropriete.ville}, {selectedPropriete.pays}
                 </div>
@@ -121,7 +121,7 @@
                 </button>
             </div>
 
-            <div class="flex gap-6 w-full">
+            <div class="flex gap-6 w-full shrink-0">
                 <ProprieteInfo propriete={selectedPropriete}/>
                 <div class="w-1/3 bg-base-100 border rounded-lg border-gray-400">
                     {#if latitude !== 0 && longitude !== 0}
@@ -141,7 +141,7 @@
                 </div>
             </div>
 
-            <div class="mt-6 bg-base-100 border rounded-lg border-gray-400 h-108 flex flex-col overflow-hidden">
+            <div class="flex-1 mt-6 bg-base-100 border rounded-lg border-gray-400 flex flex-col overflow-hidden min-h-0">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-300">
                     <h2 class="font-semibold text-lg">Historique des quittances</h2>
                     <div class="flex gap-2">
@@ -165,7 +165,7 @@
                             {#each quittances as q, i (q.id || i)}
                             <tr class="hover">
                                 <td class="font-medium">{q.period || ''}</td>
-                                <td class="text-sm">{q.tenant?.prenom || ''} {q.tenant?.nom || ''}</td>
+                                <td class="text-sm">{q.locataire?.prenom || ''} {q.locataire?.nom || ''}</td>
                                 <td class="font-mono font-semibold">{q.propriete ? (q.propriete.loyer + q.propriete.charges) : 0} €</td>
                                 <td class="text-sm text-gray-400">{q.paymentDate || ''}</td>
                                 <td>

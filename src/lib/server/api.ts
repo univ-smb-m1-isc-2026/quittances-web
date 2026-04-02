@@ -1,6 +1,8 @@
 import { env } from '$env/dynamic/private';
 
-const DEFAULT_API_BASE_URL = 'https://quittances-api:8080';
+// Déterminer dynamiquement l'URL de l'API : par défaut celle de local + docker
+// (on passe ça explicitement dans les terminaux par la suite si nécessaire)
+const DEFAULT_API_BASE_URL = env.API_BASE_URL || 'http://localhost:8080'; // fallback local
 
 function getApiBaseUrl(): string {
     const configuredBaseUrl = env.API_BASE_URL ?? env.PRIVATE_API_BASE_URL;

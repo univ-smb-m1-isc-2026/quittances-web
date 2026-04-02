@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 
 /**
- * @typedef {Object} Lessor
+ * @typedef {Object} Proprio
  * @property {string} name
  * @property {string} address
  * @property {string} city
@@ -10,7 +10,7 @@ import { jsPDF } from 'jspdf'
  */
 
 /**
- * @typedef {Object} Tenant
+ * @typedef {Object} Locataire
  * @property {string} name
  * @property {string} address
  * @property {string} city
@@ -20,8 +20,8 @@ import { jsPDF } from 'jspdf'
 
 /**
  * @typedef {Object} QuittanceData
- * @property {Lessor} lessor
- * @property {Tenant} tenant
+ * @property {Proprio} proprio
+ * @property {Locataire} locataire
  * @property {string} propertyAddress
  * @property {string} propertyCity
  * @property {number} rent
@@ -70,13 +70,13 @@ function buildDoc(data) {
     doc.text('BAILLEUR', margin, y)
     doc.setFont('helvetica', 'normal')
     y += 7
-    doc.text(data.lessor.name, margin, y)
+    doc.text(data.proprio.name, margin, y)
     y += 6
-    doc.text(data.lessor.address, margin, y)
+    doc.text(data.proprio.address, margin, y)
     y += 6
-    doc.text(data.lessor.city, margin, y)
-    if (data.lessor.phone) { y += 6; doc.text(`Tél. : ${data.lessor.phone}`, margin, y) }
-    if (data.lessor.email) { y += 6; doc.text(`Email : ${data.lessor.email}`, margin, y) }
+    doc.text(data.proprio.city, margin, y)
+    if (data.proprio.phone) { y += 6; doc.text(`Tél. : ${data.proprio.phone}`, margin, y) }
+    if (data.proprio.email) { y += 6; doc.text(`Email : ${data.proprio.email}`, margin, y) }
 
     // ── Locataire ─────────────────────────────────────────────────────────────
     let yT = 52
@@ -85,13 +85,13 @@ function buildDoc(data) {
     doc.text('LOCATAIRE', colRight, yT)
     doc.setFont('helvetica', 'normal')
     yT += 7
-    doc.text(data.tenant.name, colRight, yT)
+    doc.text(data.locataire.name, colRight, yT)
     yT += 6
-    doc.text(data.tenant.address, colRight, yT)
+    doc.text(data.locataire.address, colRight, yT)
     yT += 6
-    doc.text(data.tenant.city, colRight, yT)
-    if (data.tenant.phone) { yT += 6; doc.text(`Tél. : ${data.tenant.phone}`, colRight, yT) }
-    if (data.tenant.email) { yT += 6; doc.text(`Email : ${data.tenant.email}`, colRight, yT) }
+    doc.text(data.locataire.city, colRight, yT)
+    if (data.locataire.phone) { yT += 6; doc.text(`Tél. : ${data.locataire.phone}`, colRight, yT) }
+    if (data.locataire.email) { yT += 6; doc.text(`Email : ${data.locataire.email}`, colRight, yT) }
 
     y = Math.max(y, yT) + 8
     line(y)
@@ -115,8 +115,8 @@ function buildDoc(data) {
     doc.setFontSize(11)
 
     const bodyLines = doc.splitTextToSize(
-        `Je soussigné(e), ${data.lessor.name}, propriétaire du logement désigné ci-dessus, ` +
-        `déclare avoir reçu de ${data.tenant.name}, locataire dudit logement, ` +
+        `Je soussigné(e), ${data.proprio.name}, propriétaire du logement désigné ci-dessus, ` +
+        `déclare avoir reçu de ${data.locataire.name}, locataire dudit logement, ` +
         `la somme de ${total} € (${data.rent.toFixed(2)} € de loyer + ${data.charges.toFixed(2)} € de charges), ` +
         `au titre du loyer et des charges du mois de ${data.period}, ` +
         `réglée le ${data.paymentDate}.`,

@@ -7,7 +7,7 @@
     const defaultPeriod = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
     const defaultDate = now.toLocaleDateString('fr-FR')
 
-    let lessor = {
+    let proprio = {
         name: '',
         address: '',
         city: '',
@@ -15,7 +15,7 @@
         email: ''
     }
 
-    let tenant = {
+    let locataire = {
         name: '',
         address: '',
         city: '',
@@ -70,8 +70,8 @@
 
     function handleGenerate() {
         generateQuittance({
-            lessor,
-            tenant,
+            proprio,
+            locataire,
             propertyAddress: property.address,
             propertyCity: property.city,
             rent: parseFloat(payment.rent) || 0,
@@ -88,8 +88,8 @@
 
     function buildSnapshot() {
         return {
-            lessor: { name: lessor.name, address: lessor.address, city: lessor.city, phone: lessor.phone, email: lessor.email },
-            tenant: { name: tenant.name, address: tenant.address, city: tenant.city, phone: tenant.phone, email: tenant.email },
+            proprio: { name: proprio.name, address: proprio.address, city: proprio.city, phone: proprio.phone, email: proprio.email },
+            locataire: { name: locataire.name, address: locataire.address, city: locataire.city, phone: locataire.phone, email: locataire.email },
             propertyAddress: property.address,
             propertyCity: property.city,
             rent: parseFloat(payment.rent) || 0,
@@ -123,23 +123,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Nom complet *</span>
-                    <input class="input input-bordered w-full" bind:value={lessor.name} on:blur={refreshPreview} placeholder="Nom Prénom" required />
+                    <input class="input input-bordered w-full" bind:value={proprio.name} on:blur={refreshPreview} placeholder="Nom Prénom" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Adresse *</span>
-                    <input class="input input-bordered w-full" bind:value={lessor.address} on:blur={refreshPreview} placeholder="12 rue de la Paix" required />
+                    <input class="input input-bordered w-full" bind:value={proprio.address} on:blur={refreshPreview} placeholder="12 rue de la Paix" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Ville *</span>
-                    <input class="input input-bordered w-full" bind:value={lessor.city} on:blur={refreshPreview} placeholder="75001 Paris" required />
+                    <input class="input input-bordered w-full" bind:value={proprio.city} on:blur={refreshPreview} placeholder="75001 Paris" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Téléphone</span>
-                    <input class="input input-bordered w-full" bind:value={lessor.phone} on:blur={refreshPreview} placeholder="06 00 00 00 00" />
+                    <input class="input input-bordered w-full" bind:value={proprio.phone} on:blur={refreshPreview} placeholder="06 00 00 00 00" />
                 </label>
                 <label class="form-control w-full md:col-span-2">
                     <span class="label-text mb-1">Email</span>
-                    <input class="input input-bordered w-full" bind:value={lessor.email} on:blur={refreshPreview} type="email" placeholder="bailleur@exemple.fr" />
+                    <input class="input input-bordered w-full" bind:value={proprio.email} on:blur={refreshPreview} type="email" placeholder="bailleur@exemple.fr" />
                 </label>
             </div>
         </div>
@@ -152,23 +152,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Nom complet *</span>
-                    <input class="input input-bordered w-full" bind:value={tenant.name} on:blur={refreshPreview} placeholder="Nom Prénom" required />
+                    <input class="input input-bordered w-full" bind:value={locataire.name} on:blur={refreshPreview} placeholder="Nom Prénom" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Adresse actuelle *</span>
-                    <input class="input input-bordered w-full" bind:value={tenant.address} on:blur={refreshPreview} placeholder="5 avenue des Lilas" required />
+                    <input class="input input-bordered w-full" bind:value={locataire.address} on:blur={refreshPreview} placeholder="5 avenue des Lilas" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Ville *</span>
-                    <input class="input input-bordered w-full" bind:value={tenant.city} on:blur={refreshPreview} placeholder="69001 Lyon" required />
+                    <input class="input input-bordered w-full" bind:value={locataire.city} on:blur={refreshPreview} placeholder="69001 Lyon" required />
                 </label>
                 <label class="form-control w-full">
                     <span class="label-text mb-1">Téléphone</span>
-                    <input class="input input-bordered w-full" bind:value={tenant.phone} on:blur={refreshPreview} placeholder="06 00 00 00 00" />
+                    <input class="input input-bordered w-full" bind:value={locataire.phone} on:blur={refreshPreview} placeholder="06 00 00 00 00" />
                 </label>
                 <label class="form-control w-full md:col-span-2">
                     <span class="label-text mb-1">Email</span>
-                    <input class="input input-bordered w-full" bind:value={tenant.email} on:blur={refreshPreview} type="email" placeholder="locataire@exemple.fr" />
+                    <input class="input input-bordered w-full" bind:value={locataire.email} on:blur={refreshPreview} type="email" placeholder="locataire@exemple.fr" />
                 </label>
             </div>
         </div>
@@ -262,7 +262,7 @@
             <button
                 class="btn btn-primary btn-lg"
                 on:click={handleGenerate}
-                disabled={!lessor.name || !tenant.name || !property.address || !payment.rent || !payment.period}
+                disabled={!proprio.name || !locataire.name || !property.address || !payment.rent || !payment.period}
             >
                 Générer la quittance PDF
             </button>
