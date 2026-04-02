@@ -14,11 +14,11 @@
 
     type Quittance = {
         id?: number;
-        periode: string;
-        locataire: string;
-        montant: number;
-        dateEnvoi: string;
-        statut: string;
+        period: string;
+        tenant: { nom: string; prenom: string } | null;
+        propriete: { id: number; loyer: number; charges: number } | null;
+        paymentDate: string;
+        statut: string | null; // Tu ajusteras selon comment tu gères l'état côté appli (ex "envoyée")
     };
 
     type ApiEnvelope<T> = {
@@ -80,10 +80,15 @@
 
         if (!selectedPropriete?.id) return;
         quittances = []; // reset
-        fetch(`/api/quittances?proprieteId=${selectedPropriete.id}`)
+        fetch(`/dashboard/quittances`)
             .then(r => r.json())
-            .then((data: Quittance[]) => {
-                quittances = Array.isArray(data) ? data : [];
+            .then((payload) => {
+                const data = payload.data || [];
+                console.log("Toutes les quittances retournées par l'API :", data);
+                console.log("ID de la propriété sélectionnée :", selectedPropriete?.id);
+                // On filtre les quittances pour ne garder que celles de la propriété sélectionnée
+                quittances = Array.isArray(data) ? data.filter((q: any) => Number(q.propriete?.id) === Number(selectedPropriete?.id)) : [];
+                console.log("Quittances après filtrage :", quittances);
             })
             .catch(() => {
                 quittances = [];
@@ -160,12 +165,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#each quittances as q, i (q.id ?? `${q.periode}-${q.dateEnvoi}-${i}`)}
+                            {#each quittances as q, i (q.id || i)}
                             <tr class="hover">
-                                <td class="font-medium">{q.periode}</td>
-                                <td class="text-sm">{q.locataire}</td>
-                                <td class="font-mono font-semibold">{q.montant} €</td>
-                                <td class="text-sm text-gray-400">{q.dateEnvoi}</td>
+                                <td class="font-medium">{q.period || ''}</td>
+                                <td class="text-sm">{q.tenant?.prenom || ''} {q.tenant?.nom || ''}</td>
+                                <td class="font-mono font-semibold">{q.propriete ? (q.propriete.loyer + q.propriete.charges) : 0} €</td>
+                                <td class="text-sm text-gray-400">{q.paymentDate || ''}</td>
                                 <td>
                                     {#if q.statut === 'envoyée'}
                                         <span class="badge badge-success badge-sm">Envoyée</span>
