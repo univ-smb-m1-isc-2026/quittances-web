@@ -376,6 +376,8 @@
             signatureCity: q.signatureCity ?? selectedPropriete.ville ?? '',
             signatureImage: q.signatureImage ?? undefined
         });
+    }
+    
     function openEditModal() {
         if (!selectedPropriete) return;
         showEditModal = true;
@@ -459,6 +461,7 @@
 
         void loadQuittances();
     });
+    
 
 </script>
 
