@@ -115,9 +115,9 @@
 
     <div class="flex gap-8 items-start">
 
-    <!-- ── Formulaire ──────────────────────────────────────────── -->
+    
     <div class="flex-1 space-y-6 min-w-0">
-        <!-- Bailleur -->
+        
         <div class="card bg-base-200 shadow">
             <div class="card-body space-y-4">
                 <h2 class="card-title text-lg">Bailleur</h2>
@@ -146,7 +146,7 @@
             </div>
         </div>
 
-        <!-- Locataire -->
+        
         <div class="card bg-base-200 shadow">
             <div class="card-body space-y-4">
                 <h2 class="card-title text-lg">Locataire</h2>
@@ -175,7 +175,7 @@
             </div>
         </div>
 
-        <!-- Logement -->
+        
         <div class="card bg-base-200 shadow">
             <div class="card-body space-y-4">
                 <h2 class="card-title text-lg">Logement loué</h2>
@@ -192,7 +192,7 @@
             </div>
         </div>
 
-        <!-- Signature -->
+        
         <div class="card bg-base-200 shadow">
             <div class="card-body space-y-4">
                 <h2 class="card-title text-lg">Signature</h2>
@@ -221,7 +221,7 @@
             </div>
         </div>
 
-        <!-- Paiement -->
+        
         <div class="card bg-base-200 shadow">
             <div class="card-body space-y-4">
                 <h2 class="card-title text-lg">Paiement</h2>
@@ -258,7 +258,7 @@
             </div>
         </div>
 
-        <!-- Bouton -->
+        
         <div class="flex justify-end">
             <button
                 class="btn btn-primary btn-lg"
@@ -269,14 +269,13 @@
             </button>
         </div>
 
-        </div><!-- end form column -->
+        </div>
 
-        <!-- ── Prévisualisation ────────────────────────────────────── -->
         <aside class="w-[420px] shrink-0 sticky top-16 hidden lg:block">
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-2">Prévisualisation</div>
             <QuittancePreview data={previewData} />
         </aside>
 
-    </div><!-- end flex row -->
+    </div>
     </div>
 </div>
