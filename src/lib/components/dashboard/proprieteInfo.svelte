@@ -20,7 +20,7 @@
     <div class="text-2xl font-bold">Details et Quittance Actuelle</div>
     <div class="flex w-full gap-4">
         <div class="flex justify-between w-1/2">
-            <div class="flex flex-col divide-y divide-gray-300 [&>div]:py-2 font-medium text-lg
+            <div class="flex flex-col divide-y divide-gray-300 [&>div]:py-2 font-mosiedium text-lg
                 [&>div]:flex [&>div]:justify-between w-full
             ">
                 <div>

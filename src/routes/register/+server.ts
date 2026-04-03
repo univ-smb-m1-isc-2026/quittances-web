@@ -35,7 +35,7 @@ export const POST: RequestHandler = async ({ request, cookies, fetch }) => {
         body: JSON.stringify({ email, password })
     });
 
-    const loginPayload = loginRawPayload as ApiEnvelope<{ token?: string } | null>;
+    const loginPayload = loginRawPayload as ApiEnvelope<{ token?: string; admin?: boolean } | null>;
     if (loginStatus >= 200 && loginStatus < 300 && loginPayload?.data?.token) {
         setAuthCookie(cookies, loginPayload.data.token);
     }

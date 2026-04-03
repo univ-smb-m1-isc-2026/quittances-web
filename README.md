@@ -1,42 +1,65 @@
-# sv
+# Quittances Web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Frontend SvelteKit de gestion des quittances.
 
-## Creating a project
+## Prerequis
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Node.js 20+
+- API backend disponible sur `http://localhost:8080`
 
-```sh
-# create a new project
-npx sv create my-app
+## Installation
+
+```bash
+npm install
 ```
 
-To recreate this project with the same configuration:
+## Lancement local
 
-```sh
-# recreate this project
-npx sv create --template minimal --types ts --add tailwindcss="plugins:none" prettier eslint --install npm ./
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+```bash
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Le frontend est generalement disponible sur `http://localhost:5173`.
 
-To create a production version of your app:
+## Variables utiles
 
-```sh
+- `API_BASE_URL` (ou `PRIVATE_API_BASE_URL`) pour pointer vers l'API.
+- Valeur par defaut si non definie : `http://localhost:8080`.
+
+## Authentification
+
+- Connexion proprio : endpoint backend `/api/proprios/login`.
+- Connexion admin : si l'email respecte `^[a-zA-Z0-9]+@root.com$`, le frontend appelle `/api/admins/login`.
+- Le token est stocke en cookie `auth_token` (httpOnly).
+- Le flag admin est maintenu cote frontend dans un store (`src/lib/stores/auth.js`).
+
+## Navigation admin
+
+Quand un admin est connecte :
+
+- Le dashboard proprio est masque.
+- La route `/dashboard` redirige vers `/dashboard/admin/proprios`.
+- Le header affiche des actions admin (centre) :
+	- Tous les proprios
+	- Perf & stats
+	- Journal d'audit
+
+Pages admin actuelles :
+
+- `/dashboard/admin/proprios`
+- `/dashboard/admin/performance`
+- `/dashboard/admin/audit`
+
+## Verification
+
+```bash
+npm run check
+npm run lint
+```
+
+## Build
+
+```bash
 npm run build
+npm run preview
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

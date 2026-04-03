@@ -24,15 +24,23 @@
         state: string;
     };
 
-    let { open = false }: { open?: boolean } = $props();
+    let {
+        open = false,
+        mode = 'create',
+        propriete = null
+    }: {
+        open?: boolean;
+        mode?: 'create' | 'edit';
+        propriete?: Propriete | null;
+    } = $props();
 
     const dispatch = createEventDispatcher<{
         close: void;
-        created: { property: Propriete };
+        saved: { property: Propriete };
     }>();
 
-    let createError = $state('');
-    let isCreating = $state(false);
+    let formError = $state('');
+    let isSubmitting = $state(false);
 
     let adresse = $state('');
     let ville = $state('');
@@ -47,6 +55,7 @@
     let infosComplementaires = $state('');
     let image = $state('');
     let idLocataire = $state('');
+
     let locataireList = $state<Locataire[]>([]);
     let isLoadingLocataires = $state(false);
     let wasOpen = $state(false);
@@ -54,15 +63,47 @@
 
     const typeOptions = ['STUDIO', 'T1', 'T2', 'T3', 'T4', 'T5', 'DUPLEX', 'TRIPLEX', 'SOUPLEX', 'LOFT'];
 
+    const isEditMode = $derived(mode === 'edit');
+    const modalTitle = $derived(isEditMode ? 'Modifier la propriete' : 'Ajouter une propriete');
+    const submitLabel = $derived(isEditMode ? 'Enregistrer' : 'Creer la propriete');
+    const submitLoadingLabel = $derived(isEditMode ? 'Enregistrement...' : 'Creation...');
+
     $effect(() => {
         if (open && !wasOpen) {
+            if (isEditMode) {
+                prefillForm();
+            } else {
+                resetForm();
+            }
             void loadLocataires();
         }
 
         wasOpen = open;
     });
 
-    function resetCreateForm() {
+    function prefillForm() {
+        if (!propriete) {
+            resetForm();
+            return;
+        }
+
+        const current = propriete as Record<string, unknown>;
+        adresse = String(current.adresse ?? '');
+        ville = String(current.ville ?? '');
+        pays = String(current.pays ?? 'France');
+        surfaceM2 = String(current.surfaceM2 ?? '');
+        type = String(current.type ?? '');
+        loyer = String(current.loyer ?? '');
+        charges = String(current.charges ?? '');
+        dureeBail = String(current.dureeBail ?? '');
+        periodicite = current.periodicite == null ? '' : String(current.periodicite);
+        infosComplementaires = String(current.infosComplementaires ?? '');
+        image = String(current.image ?? '');
+        idLocataire = current.idLocataire == null ? '' : String(current.idLocataire);
+        formError = '';
+    }
+
+    function resetForm() {
         adresse = '';
         ville = '';
         pays = 'France';
@@ -76,12 +117,11 @@
         infosComplementaires = '';
         image = '';
         idLocataire = '';
-        createError = '';
+        formError = '';
     }
 
     function closeModal() {
-        if (isCreating) return;
-        resetCreateForm();
+        if (isSubmitting) return;
         dispatch('close');
     }
 
@@ -90,12 +130,10 @@
         locataireList = [createdLocataire, ...locataireList];
         idLocataire = String(createdLocataire.id);
         showAddLocataireModal = false;
-        createError = '';
+        formError = '';
     }
 
     async function loadLocataires() {
-        createError = '';
-
         if (locataireList.length > 0) {
             return;
         }
@@ -106,27 +144,27 @@
             const payload = await response.json() as ApiEnvelope<Locataire[] | null>;
 
             if (!response.ok) {
-                createError = payload.state ?? '[ERROR] Impossible de charger les locataires.';
+                formError = payload.state ?? '[ERROR] Impossible de charger les locataires.';
                 return;
             }
 
             locataireList = payload.data ?? [];
             if (locataireList.length === 0) {
-                createError = payload.state || '[INFO] Aucun locataire en bdd';
+                formError = payload.state || '[INFO] Aucun locataire en bdd';
             }
         } catch {
-            createError = 'Impossible de charger les locataires.';
+            formError = 'Impossible de charger les locataires.';
         } finally {
             isLoadingLocataires = false;
         }
     }
 
-    async function createProperty(event: SubmitEvent) {
+    async function submitProperty(event: SubmitEvent) {
         event.preventDefault();
-        createError = '';
+        formError = '';
 
         if (!adresse || !ville || !pays || !surfaceM2 || !type || !loyer || !charges || !dureeBail || !idLocataire) {
-            createError = 'Merci de remplir tous les champs obligatoires.';
+            formError = 'Merci de remplir tous les champs obligatoires.';
             return;
         }
 
@@ -142,20 +180,41 @@
         }
 
         if (locataireList.length === 0) {
-            createError = 'Aucun locataire disponible. Créez d\'abord un locataire.';
+            formError = 'Aucun locataire disponible. Creez d\'abord un locataire.';
             return;
         }
 
         if (!typeOptions.includes(String(type).trim().toUpperCase())) {
-            createError = 'Type invalide. Choisissez une valeur dans la liste.';
+            formError = 'Type invalide. Choisissez une valeur dans la liste.';
             return;
         }
 
-        isCreating = true;
+        if (isEditMode && !propriete?.id) {
+            formError = 'Identifiant de propriete manquant.';
+            return;
+        }
+
+        isSubmitting = true;
 
         try {
+            const body = {
+                ...(isEditMode ? { id: propriete?.id } : {}),
+                adresse: adresse.trim(),
+                ville: ville.trim(),
+                pays: pays.trim(),
+                surfaceM2: Number(surfaceM2),
+                type: String(type).trim().toUpperCase(),
+                loyer: Number(loyer),
+                charges: Number(charges),
+                dureeBail: Number(dureeBail),
+                periodicite: periodicite ? Number(periodicite) : null,
+                infosComplementaires: infosComplementaires ? infosComplementaires.trim() : null,
+                image: image ? image.trim() : null,
+                idLocataire: Number(idLocataire)
+            };
+
             const response = await fetch('/dashboard/proprietes', {
-                method: 'POST',
+                method: isEditMode ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     adresse: adresse.trim(),
@@ -176,22 +235,25 @@
             const payload = await response.json() as ApiEnvelope<Propriete | null>;
 
             if (!response.ok || !payload.data) {
-                createError = payload.state ?? '[ERROR] Impossible de creer la propriete.';
+                formError = payload.state ?? '[ERROR] Impossible de sauvegarder la propriete.';
                 return;
             }
 
-            resetCreateForm();
-            dispatch('created', { property: payload.data });
+            dispatch('saved', { property: payload.data });
+            if (!isEditMode) {
+                resetForm();
+            }
+            dispatch('close');
         } catch {
-            createError = 'Impossible de créer la propriété pour le moment.';
+            formError = 'Impossible de sauvegarder la propriete pour le moment.';
         } finally {
-            isCreating = false;
+            isSubmitting = false;
         }
     }
 </script>
 
-<Modal open={open} onClose={closeModal} title="Ajouter une propriété" maxWidthClass="max-w-2xl">
-    <form class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit={createProperty}>
+<Modal open={open} onClose={closeModal} title={modalTitle} maxWidthClass="max-w-2xl">
+    <form class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit={submitProperty}>
         <label class="form-control w-full">
             <span class="label-text">Adresse</span>
             <input class="input input-bordered" bind:value={adresse} required />
@@ -208,14 +270,14 @@
         </label>
 
         <label class="form-control w-full">
-            <span class="label-text">Surface (m²)</span>
+            <span class="label-text">Surface (m2)</span>
             <input type="number" min="0" step="0.1" class="input input-bordered" bind:value={surfaceM2} required />
         </label>
 
         <label class="form-control w-full">
             <span class="label-text">Type de logement</span>
             <select class="select select-bordered" bind:value={type} required>
-                <option value="" disabled selected>Choisir un type</option>
+                <option value="" disabled>Choisir un type</option>
                 {#each typeOptions as typeOption (typeOption)}
                     <option value={typeOption}>{typeOption}</option>
                 {/each}
@@ -233,24 +295,24 @@
         </label>
 
         <label class="form-control w-full">
-            <span class="label-text">Durée du bail (mois)</span>
+            <span class="label-text">Duree du bail (mois)</span>
             <input type="number" min="1" step="1" class="input input-bordered" bind:value={dureeBail} required />
         </label>
 
         <label class="form-control w-full">
             <span class="label-text">Locataire</span>
             <div class="flex gap-2">
-            <select class="select select-bordered" bind:value={idLocataire} required disabled={isLoadingLocataires || locataireList.length === 0}>
-                <option value="" disabled selected>Choisir un locataire</option>
-                {#each locataireList as locataire (locataire.id)}
-                    <option value={String(locataire.id)}>
-                        {locataire.prenom} {locataire.nom} ({locataire.email})
-                    </option>
-                {/each}
-            </select>
-            <button type="button" class="btn btn-outline" onclick={() => (showAddLocataireModal = true)}>
-                Ajouter
-            </button>
+                <select class="select select-bordered" bind:value={idLocataire} required disabled={isLoadingLocataires || locataireList.length === 0}>
+                    <option value="" disabled>Choisir un locataire</option>
+                    {#each locataireList as locataire (locataire.id)}
+                        <option value={String(locataire.id)}>
+                            {locataire.prenom} {locataire.nom} ({locataire.email})
+                        </option>
+                    {/each}
+                </select>
+                <button type="button" class="btn btn-outline" onclick={() => (showAddLocataireModal = true)}>
+                    Ajouter
+                </button>
             </div>
             {#if isLoadingLocataires}
                 <span class="label-text-alt">Chargement des locataires...</span>
@@ -285,18 +347,18 @@
         </label>
 
         <label class="form-control w-full md:col-span-2">
-            <span class="label-text">Informations complémentaires (optionnel)</span>
+            <span class="label-text">Informations complementaires (optionnel)</span>
             <textarea class="textarea textarea-bordered min-h-24" bind:value={infosComplementaires}></textarea>
         </label>
 
-        {#if createError}
-            <p class="md:col-span-2 text-sm text-error">{createError}</p>
+        {#if formError}
+            <p class="md:col-span-2 text-sm text-error">{formError}</p>
         {/if}
 
         <div class="md:col-span-2 flex justify-end gap-3 pt-2">
-            <button type="button" class="btn btn-ghost" onclick={closeModal} disabled={isCreating}>Annuler</button>
-            <button type="submit" class="btn btn-primary" disabled={isCreating}>
-                {#if isCreating}Création...{:else}Créer la propriété{/if}
+            <button type="button" class="btn btn-ghost" onclick={closeModal} disabled={isSubmitting}>Annuler</button>
+            <button type="submit" class="btn btn-primary" disabled={isSubmitting}>
+                {#if isSubmitting}{submitLoadingLabel}{:else}{submitLabel}{/if}
             </button>
         </div>
     </form>

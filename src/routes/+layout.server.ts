@@ -1,8 +1,10 @@
 import type { ServerLoad } from '@sveltejs/kit';
+import { extractAdminFromToken } from '$lib/server/route-utils';
 
 export const load: ServerLoad = async ({ cookies }) => {
     const token = cookies.get('auth_token');
     return {
-        isAuthenticated: Boolean(token)
+        isAuthenticated: Boolean(token),
+        isAdmin: token ? extractAdminFromToken(token) : false
     };
 };
