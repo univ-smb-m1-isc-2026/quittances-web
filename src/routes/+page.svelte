@@ -1,12 +1,14 @@
+
 <div class="bg-base-100 h-[calc(100vh-4rem)] flex flex-col">
-	<div class="bg-base-300 flex-1 mx-4 rounded-t-2xl border-gray-400 border-1 overflow-y-auto scroll-container">
+	<div class="bg-base-300 flex- mx-4 rounded-t-2xl border-gray-400 border-1 overflow-y-auto scroll-container">
 		<div
 			style="background: linear-gradient(180deg,var(--color-primary) 0%, var(--color-base-300) 100%);"
-			class="h-160 flex items-center justify-center text-4xl font-bold text-white"
+			class="h-160 flex flex-col gap-8 items-center justify-center text-4xl font-bold text-white"
 		>
 			<div>
 				ClaQuittances, votre solution de gestion de quittances en ligne.
 			</div>
+			<a href="/dashboard/generator" class="bg-gray-400 py-1 px-2 text-primary-content rounded-md font-semibold hover:bg-primary/70 transition-colors">Générer une quittance gratuitement</a>
 		</div>
 
 		<div
