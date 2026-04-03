@@ -5,11 +5,13 @@
     let {
         open = false,
         title = 'Confirmer la suppression',
-        message = 'Voulez-vous vraiment supprimer cet element ?'
+        message = 'Voulez-vous vraiment supprimer cet element ?',
+        confirmLabel = 'Supprimer'
     }: {
         open?: boolean;
         title?: string;
         message?: string;
+        confirmLabel?: string;
     } = $props();
 
     const dispatch = createEventDispatcher<{
@@ -32,7 +34,7 @@
 
         <div class="flex justify-end gap-3">
             <button type="button" class="btn btn-ghost" onclick={closeModal}>Annuler</button>
-            <button type="button" class="btn btn-error text-white" onclick={confirmDelete}>Supprimer</button>
+            <button type="button" class="btn btn-error text-white" onclick={confirmDelete}>{confirmLabel}</button>
         </div>
     </div>
 </Modal>
