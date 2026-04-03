@@ -30,12 +30,19 @@
 		</a>
 
 		<!-- Colonne centrale -->
-		{#if isAuthenticated && !(isAdmin || $admin)}
-			<div class="grid grid-cols-3 items-center justify-center text-center">
-				<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/dashboard')}>Dashboard</a></div>
-				<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
-				<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
-			</div>
+		{#if isAuthenticated }
+		
+			{#if (isAdmin || $admin)}
+				<div class="flex items-center justify-center">
+						<AdminCenterActions />
+				</div>
+			{:else}
+				<div class="grid grid-cols-3 items-center justify-center text-center">
+					<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/dashboard')}>Dashboard</a></div>
+					<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
+					<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
+				</div>
+			{/if}
 		{:else}
 			<div class="grid grid-cols-3 items-center justify-center text-center">
 				<div class="border-l-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
@@ -44,11 +51,6 @@
 			</div>
 		{/if}
 
-		{#if isAuthenticated && (isAdmin || $admin)}
-			<div class="flex items-center justify-center">
-					<AdminCenterActions />
-			</div>
-		{/if}
 
 		<div class="flex-none gap-2 flex justify-end items-center">
 			{#if isAuthenticated}				
