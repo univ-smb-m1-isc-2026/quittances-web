@@ -7,67 +7,84 @@ type ServerFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Res
 const AUTH_COOKIE_NAME = 'auth_token';
 
 export function buildApiHeaders(origin: string | null): Record<string, string> {
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-    };
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json'
+	};
 
-    if (origin) {
-        headers.Origin = origin;
-    }
+	if (origin) {
+		headers.Origin = origin;
+	}
 
-    return headers;
+	return headers;
 }
 
 export function getAuthToken(cookies: Cookies): string | null {
-    return cookies.get(AUTH_COOKIE_NAME) ?? null;
+	return cookies.get(AUTH_COOKIE_NAME) ?? null;
 }
 
 export function setAuthCookie(cookies: Cookies, token: string): void {
-    cookies.set(AUTH_COOKIE_NAME, token, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 60 * 60 * 24
-    });
+	cookies.set(AUTH_COOKIE_NAME, token, {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: false,
+		maxAge: 60 * 60 * 24
+	});
+}
+
+export function clearAuthCookie(cookies: Cookies): void {
+	cookies.delete(AUTH_COOKIE_NAME, { path: '/' });
 }
 
 export function buildErrorState(details: string): ApiEnvelope<null> {
-    return { data: null, state: `[ERROR] ${details}` };
+	return { data: null, state: `[ERROR] ${details}` };
 }
 
 export function extractOwnerIdFromToken(token: string): number | null {
-    try {
-        const parts = token.split('.');
-        if (parts.length < 2) {
-            return null;
-        }
+	try {
+		const payload = decodeTokenPayload(token);
+		const ownerId = Number(payload.id);
+		return Number.isNaN(ownerId) ? null : ownerId;
+	} catch {
+		return null;
+	}
+}
 
-        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-        const payloadJson = Buffer.from(padded, 'base64').toString('utf8');
-        const payload = JSON.parse(payloadJson) as Record<string, unknown>;
-        const ownerId = Number(payload.id);
-        return Number.isNaN(ownerId) ? null : ownerId;
-    } catch {
-        return null;
-    }
+export function extractAdminFromToken(token: string): boolean {
+	try {
+		const payload = decodeTokenPayload(token);
+		return payload.admin === true;
+	} catch {
+		return false;
+	}
+}
+
+function decodeTokenPayload(token: string): Record<string, unknown> {
+	const parts = token.split('.');
+	if (parts.length < 2) {
+		throw new Error('invalid token');
+	}
+
+	const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+	const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+	const payloadJson = Buffer.from(padded, 'base64').toString('utf8');
+	return JSON.parse(payloadJson) as Record<string, unknown>;
 }
 
 export async function proxyApiJson(
-    fetchFn: ServerFetch,
-    path: string,
-    init: RequestInit
+	fetchFn: ServerFetch,
+	path: string,
+	init: RequestInit
 ): Promise<{ status: number; payload: unknown }> {
-    const response = await fetchFn(apiUrl(path), init);
+	const response = await fetchFn(apiUrl(path), init);
 
-    try {
-        const payload = await response.json();
-        return { status: response.status, payload };
-    } catch {
-        return {
-            status: response.status,
-            payload: buildErrorState('Reponse backend invalide')
-        };
-    }
+	try {
+		const payload = await response.json();
+		return { status: response.status, payload };
+	} catch {
+		return {
+			status: response.status,
+			payload: buildErrorState('Reponse backend invalide')
+		};
+	}
 }

@@ -2,11 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import AdminCenterActions from '$lib/components/admin/AdminCenterActions.svelte';
+	import { admin, setAdmin } from '../stores/auth.js';
 
-	let { isAuthenticated } = $props();
+	let { isAuthenticated, isAdmin = false } = $props();
 
 	async function handleLogout() {
 		await fetch('/logout', { method: 'POST' });
+		setAdmin(false);
 		await invalidateAll();
 		await goto(resolve('/login'));
 	}
@@ -27,17 +30,22 @@
 		</a>
 
 		<!-- Colonne centrale -->
-		<div class="grid grid-cols-3 items-center justify-center text-center">
-			<div class="border-l-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
-			<div class="border-x-1 border-gray-400"><a href={resolve('/pricing')}>Tarifs</a></div>
-			<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
+		<div class="flex items-center justify-center">
+			{#if isAuthenticated && (isAdmin || $admin)}
+				<AdminCenterActions />
+			{/if}
 		</div>
 
 		<!-- Colonne droite -->
-		<div class="flex-none gap-2 flex justify-end">
+		<div class="flex-none gap-2 flex justify-end items-center">
 		
 			{#if isAuthenticated}
-				<a href={resolve('/dashboard')} class="btn btn-ghost btn-sm">Dashboard</a>
+				{#if isAdmin || $admin}
+					<span class="badge badge-secondary badge-sm">Admin</span>
+				{/if}
+				{#if !(isAdmin || $admin)}
+					<a href={resolve('/dashboard')} class="btn btn-ghost btn-sm">Dashboard</a>
+				{/if}
 				<div class="dropdown dropdown-end">
 					<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
 						<div class="w-10 rounded-full ring ring-primary/25 ring-offset-base-100 ring-offset-2">
@@ -51,8 +59,10 @@
 						tabindex="-1"
 						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-56 p-2 shadow"
 					>
-						<li><a href={resolve('/dashboard')}>Mon dashboard</a></li>
-						<li><a href={resolve('/dashboard/generator')}>Generer une quittance</a></li>
+						{#if !(isAdmin || $admin)}
+							<li><a href={resolve('/dashboard')}>Mon dashboard</a></li>
+							<li><a href={resolve('/dashboard/generator')}>Generer une quittance</a></li>
+						{/if}
 						<li>
 							<button type="button" onclick={handleLogout}>Se deconnecter</button>
 						</li>

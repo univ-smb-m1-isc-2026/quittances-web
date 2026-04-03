@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { setAdmin } from '../../lib/stores/auth.js';
 
 	let email = '';
 	let password = '';
@@ -36,13 +37,15 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password })
 			});
-			const payload = await response.json() as ApiEnvelope<unknown>;
+			const payload = await response.json() as ApiEnvelope<{ admin?: boolean } | null>;
 			if (!response.ok) {
 				errorMessage = payload?.state || '[ERROR] Identifiants invalides';
 				return;
 			}
+			const isAdminSession = Boolean(payload?.data?.admin);
+			setAdmin(isAdminSession);
 			await invalidateAll();
-			await goto(resolve('/dashboard'));
+			await goto(isAdminSession ? `${resolve('/dashboard')}/admin/proprios` : resolve('/dashboard'));
 		} catch {
 			errorMessage = 'Impossible de se connecter pour le moment.';
 		} finally {
