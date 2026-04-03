@@ -1,18 +1,24 @@
 <script lang="ts">
     let {
-        propriete
+        propriete,
+        onResendQuittance = undefined
     }: {
         propriete: {
-            statut?: string;
             loyer?: number;
             periodicite?: number;
             locataire?: {
                 prenom?: string;
                 nom?: string;
             } | null;
-            quittanceEnCours?: string;
+            quittanceEnCours?: {
+                id?: number;
+                period?: string;
+                echeance?: string;
+                statutLabel?: string;
+            } | null;
             [key: string]: unknown;
         };
+        onResendQuittance?: (() => void) | undefined;
     } = $props();
 </script>
 
@@ -44,12 +50,16 @@
             <div class="flex flex-col divide-y divide-gray-300 [&>div]:py-2 font-medium text-lg
                 [&>div]:flex [&>div]:justify-between w-full
             ">
-                <div><div>Quittance en cours</div> <div>{propriete.quittanceEnCours}</div></div> <!-- quittanceEnCours.name -->
-                <div><div>Échéance</div> <div>{propriete.quittanceEnCours}</div></div> <!-- quittanceEnCours.echeance -->
-                <div><div>Statut</div> <div>{propriete.quittanceEnCours}</div></div> <!-- quittanceEnCours.status -->
-                
+                <div><div>Quittance en cours</div> <div>{propriete.quittanceEnCours?.period ?? '-'}</div></div>
+                <div><div>Échéance</div> <div>{propriete.quittanceEnCours?.echeance ?? '-'}</div></div>
+                <div><div>Statut</div> <div>{propriete.quittanceEnCours?.statutLabel ?? '-'}</div></div>
             </div>
-            <button type="button" class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">
+            <button
+                type="button"
+                class="border-1 border-gray-400 py-1 px-2 rounded-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-gray-400 hover:bg-gray-400 hover:text-base-100"
+                onclick={() => onResendQuittance?.()}
+                disabled={!propriete.quittanceEnCours?.id || !onResendQuittance}
+            >
                 Renvoyez une quittance
             </button>
         </div>
