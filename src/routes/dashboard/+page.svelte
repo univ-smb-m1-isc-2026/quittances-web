@@ -5,6 +5,7 @@
     import ProprieteInfo from "$lib/components/dashboard/proprieteInfo.svelte";
     import FormPropriete from '$lib/components/dashboard/FormPropriete.svelte';
     import ConfirmDelete from '$lib/components/dashboard/ConfirmDelete.svelte';
+    import GenerateQuittanceModal from '$lib/components/dashboard/GenerateQuittanceModal.svelte';
 
     type Propriete = {
         id: number;
@@ -48,6 +49,62 @@
         signatureImage?: string | null;
     };
 
+    type ProprioProfile = {
+        id: number;
+        nom: string;
+        prenom: string;
+        email: string;
+        telephone: string;
+    };
+
+    type CreateQuittanceOptions = {
+        paymentDate?: string;
+        signatureCity?: string;
+        signatureImage?: string | null;
+        statut?: string;
+    };
+
+    type QuittanceEnCours = {
+        id?: number;
+        period: string;
+        echeance: string;
+        statutLabel: string;
+    } | null;
+
+    type GenerateModalConfirmDetail = {
+        createData: {
+            period: string;
+            paymentDate: string;
+            signatureCity: string;
+            signatureImage: string | null;
+            statut: string;
+        };
+        pdfData: {
+            proprio: {
+                name: string;
+                address: string;
+                city: string;
+                phone: string;
+                email: string;
+            };
+            locataire: {
+                name: string;
+                address: string;
+                city: string;
+                phone: string;
+                email: string;
+            };
+            propertyAddress: string;
+            propertyCity: string;
+            rent: number;
+            charges: number;
+            period: string;
+            paymentDate: string;
+            signatureCity: string;
+            signatureImage?: string;
+        };
+    };
+
     type ApiEnvelope<T> = {
         data: T;
         state: string;
@@ -61,9 +118,13 @@
     let actionError = $state('');
     let actionMessage = $state('');
     let quittances = $state<Quittance[]>([]);
+    let currentProprio = $state<ProprioProfile | null>(null);
+    let quittanceEnCours = $state<QuittanceEnCours>(null);
     let isGeneratingQuittance = $state(false);
     let isCatchingUp = $state(false);
     let isResendingById = $state<Record<number, boolean>>({});
+    let isMarkingPaidById = $state<Record<number, boolean>>({});
+    let showGenerateModal = $state(false);
     let showEditModal = $state(false);
     let showDeleteModal = $state(false);
     let isDeletingPropriete = $state(false);
@@ -112,6 +173,22 @@
         }
     }
 
+    async function loadCurrentProprio() {
+        try {
+            const response = await fetch('/dashboard/proprio');
+            const payload = await response.json() as ApiEnvelope<ProprioProfile | null>;
+
+            if (!response.ok) {
+                currentProprio = null;
+                return;
+            }
+
+            currentProprio = payload.data ?? null;
+        } catch {
+            currentProprio = null;
+        }
+    }
+
     function normalizeLabel(value: string): string {
         return value
             .toLowerCase()
@@ -146,6 +223,7 @@
     function getStatusLabel(statut: string | null | undefined): string {
         const normalized = normalizeLabel(statut ?? '').replace(/\s+/g, '_');
         if (normalized === 'en_attente' || normalized === 'pending') return 'En attente';
+        if (normalized === 'payee' || normalized === 'paye' || normalized === 'paid') return 'Payee';
         if (normalized === 'envoyee' || normalized === 'envoye' || normalized === 'sent') return 'Envoyee';
         if (normalized === 'echec' || normalized === 'failed' || normalized === 'fail') return 'Echec';
         return 'Echec';
@@ -153,9 +231,66 @@
 
     function getStatusBadgeClass(statut: string | null | undefined): string {
         const label = getStatusLabel(statut);
+        if (label === 'Payee') return 'badge-primary';
         if (label === 'Envoyee') return 'badge-success';
         if (label === 'En attente') return 'badge-warning';
         return 'badge-error';
+    }
+
+    function isStatusPayee(statut: string | null | undefined): boolean {
+        const normalized = normalizeLabel(statut ?? '').replace(/\s+/g, '_');
+        return normalized === 'payee' || normalized === 'paye' || normalized === 'paid';
+    }
+
+    function periodRank(period: string | null | undefined): number {
+        const normalized = normalizeLabel(period ?? '');
+        if (!normalized) return Number.NEGATIVE_INFINITY;
+
+        const parts = normalized.split(' ');
+        if (parts.length < 2) return Number.NEGATIVE_INFINITY;
+
+        const year = Number(parts[parts.length - 1]);
+        if (Number.isNaN(year)) return Number.NEGATIVE_INFINITY;
+
+        const monthLabel = parts.slice(0, parts.length - 1).join(' ');
+        const monthIndex = FR_MONTHS.indexOf(monthLabel);
+        if (monthIndex < 0) return Number.NEGATIVE_INFINITY;
+
+        return year * 12 + monthIndex;
+    }
+
+    function findQuittanceEnCours(items: Quittance[]): Quittance | null {
+        if (items.length === 0) {
+            return null;
+        }
+
+        let current = items[0];
+        let currentRank = periodRank(current.period);
+
+        for (const quittance of items) {
+            const rank = periodRank(quittance.period);
+            if (rank > currentRank) {
+                current = quittance;
+                currentRank = rank;
+            }
+        }
+
+        return current;
+    }
+
+    function refreshQuittanceEnCours(items: Quittance[]) {
+        const current = findQuittanceEnCours(items);
+        if (!current) {
+            quittanceEnCours = null;
+            return;
+        }
+
+        quittanceEnCours = {
+            id: current.id,
+            period: current.period ?? '-',
+            echeance: current.paymentDate ?? '-',
+            statutLabel: getStatusLabel(current.statut)
+        };
     }
 
     function getSelectedLocataireId(): number | null {
@@ -177,6 +312,7 @@
     async function loadQuittances() {
         if (!selectedPropriete?.id) {
             quittances = [];
+            refreshQuittanceEnCours([]);
             return;
         }
 
@@ -189,6 +325,7 @@
             if (!response.ok) {
                 actionError = payload.state ?? '[ERROR] Impossible de charger les quittances.';
                 quittances = [];
+                refreshQuittanceEnCours([]);
                 return;
             }
 
@@ -196,15 +333,20 @@
             quittances = Array.isArray(data)
                 ? data.filter((q: Quittance) => Number(q.propriete?.id) === Number(selectedPropriete?.id))
                 : [];
+            refreshQuittanceEnCours(quittances);
         } catch {
             actionError = 'Impossible de charger les quittances.';
             quittances = [];
+            refreshQuittanceEnCours([]);
         } finally {
             isLoadingQuittances = false;
         }
     }
 
-    async function createQuittanceForPeriod(period: string): Promise<{ ok: boolean; state: string; status: number }> {
+    async function createQuittanceForPeriod(
+        period: string,
+        options: CreateQuittanceOptions = {}
+    ): Promise<{ ok: boolean; state: string; status: number }> {
         if (!selectedPropriete?.id) {
             return { ok: false, state: '[ERROR] Aucune propriete selectionnee.', status: 400 };
         }
@@ -222,9 +364,10 @@
                     proprieteId: Number(selectedPropriete.id),
                     locataireId,
                     period,
-                    paymentDate: currentDateLabel(),
-                    signatureCity: selectedPropriete.ville ?? '',
-                    statut: 'ENVOYEE'
+                    paymentDate: options.paymentDate ?? currentDateLabel(),
+                    signatureCity: options.signatureCity ?? selectedPropriete.ville ?? '',
+                    signatureImage: options.signatureImage ?? null,
+                    statut: options.statut ?? 'ENVOYEE'
                 })
             });
 
@@ -246,9 +389,26 @@
     async function generateCurrentQuittance() {
         actionError = '';
         actionMessage = '';
-        isGeneratingQuittance = true;
+        showGenerateModal = true;
+    }
 
-        const result = await createQuittanceForPeriod(currentPeriodLabel());
+    function closeGenerateModal() {
+        if (isGeneratingQuittance) return;
+        showGenerateModal = false;
+    }
+
+    async function handleGenerateModalConfirm(event: CustomEvent<GenerateModalConfirmDetail>) {
+        isGeneratingQuittance = true;
+        actionError = '';
+        actionMessage = '';
+
+        const result = await createQuittanceForPeriod(event.detail.createData.period, {
+            paymentDate: event.detail.createData.paymentDate,
+            signatureCity: event.detail.createData.signatureCity,
+            signatureImage: event.detail.createData.signatureImage,
+            statut: event.detail.createData.statut
+        });
+
         if (!result.ok) {
             actionError = result.state || '[ERROR] Impossible de generer la quittance.';
             isGeneratingQuittance = false;
@@ -259,6 +419,9 @@
         if (result.state) {
             actionMessage = result.state;
         }
+
+        generateQuittance(event.detail.pdfData);
+        showGenerateModal = false;
         await loadQuittances();
         isGeneratingQuittance = false;
     }
@@ -343,6 +506,47 @@
         }
     }
 
+    async function markAsPaid(quittanceId: number | undefined) {
+        if (!quittanceId) return;
+
+        actionError = '';
+        actionMessage = '';
+        isMarkingPaidById = {
+            ...isMarkingPaidById,
+            [quittanceId]: true
+        };
+
+        try {
+            const response = await fetch(`/dashboard/quittances/${quittanceId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    statut: 'PAYEE'
+                })
+            });
+
+            const payload = await response.json() as ApiEnvelope<unknown>;
+            if (!response.ok) {
+                actionError = payload.state ?? '[ERROR] Impossible de valider cette quittance comme payee.';
+                return;
+            }
+
+            actionMessage = payload.state ?? '[SUCCESS] Quittance marquee comme payee.';
+            await loadQuittances();
+        } catch {
+            actionError = '[ERROR] Impossible de valider cette quittance comme payee.';
+        } finally {
+            isMarkingPaidById = {
+                ...isMarkingPaidById,
+                [quittanceId]: false
+            };
+        }
+    }
+
+    function resendCurrentQuittance() {
+        void resendQuittance(quittanceEnCours?.id);
+    }
+
     function downloadQuittance(q: Quittance) {
         if (!selectedPropriete) {
             actionError = '[ERROR] Selectionnez une propriete avant de telecharger.';
@@ -351,14 +555,15 @@
 
         const rent = Number(q.propriete?.loyer ?? selectedPropriete.loyer ?? 0);
         const charges = Number(q.propriete?.charges ?? selectedPropriete.charges ?? 0);
+        const ownerName = `${currentProprio?.prenom ?? ''} ${currentProprio?.nom ?? ''}`.trim() || 'Proprietaire';
 
         generateQuittance({
             proprio: {
-                name: 'Proprietaire',
+                name: ownerName,
                 address: '',
                 city: selectedPropriete.ville ?? '',
-                phone: '',
-                email: ''
+                phone: currentProprio?.telephone ?? '',
+                email: currentProprio?.email ?? ''
             },
             locataire: {
                 name: `${q.locataire?.prenom ?? ''} ${q.locataire?.nom ?? ''}`.trim() || 'Locataire',
@@ -436,12 +641,20 @@
         selectedPropriete = updatedProperty;
     }
 
+    function handlePropertySelect(event: CustomEvent<{ id: Propriete }>) {
+        selectedPropriete = event.detail.id;
+    }
+
     onMount(async () => {
-        await loadProprietes();
+        await Promise.all([loadProprietes(), loadCurrentProprio()]);
     });
 
     $effect(() => {
-        if (!selectedPropriete?.adresse) return;
+        if (!selectedPropriete?.adresse) {
+            quittances = [];
+            refreshQuittanceEnCours([]);
+            return;
+        }
 
         actionError = '';
         actionMessage = '';
@@ -469,7 +682,7 @@
     <ListPropriete
         proprieteList={proprieteList}
         isLoading={isLoadingProprietes}
-        on:select={(e: CustomEvent<{ id: Propriete }>) => selectedPropriete = e.detail.id}
+        on:select={handlePropertySelect}
         on:propertyCreated={loadProprietes}
     />
     <div class="border-l border-t border-gray-400 h-full w-full rounded-tl-xl p-6 bg-base-300 flex flex-col">
@@ -504,8 +717,10 @@
                 <ProprieteInfo
                     propriete={{
                         ...selectedPropriete,
-                        locataire: selectedPropriete.locataire ?? undefined
+                        locataire: selectedPropriete.locataire ?? undefined,
+                        quittanceEnCours
                     }}
+                    onResendQuittance={resendCurrentQuittance}
                 />
                 <div class="w-1/3 bg-base-100 border rounded-lg border-gray-400">
                     {#if latitude !== 0 && longitude !== 0}
@@ -532,7 +747,7 @@
                         <button class="btn btn-sm btn-ghost" onclick={catchUpPastPeriods} disabled={isCatchingUp || isGeneratingQuittance || isLoadingQuittances}>
                             {#if isCatchingUp}Rattrapage...{:else}Catch-up periodes passees{/if}
                         </button>
-                        <button class="btn btn-sm btn-primary" onclick={generateCurrentQuittance} disabled={isGeneratingQuittance || isCatchingUp || isLoadingQuittances}>
+                        <button class="btn btn-sm btn-primary" onclick={generateCurrentQuittance} disabled={isGeneratingQuittance || isCatchingUp || isLoadingQuittances || showGenerateModal}>
                             {#if isGeneratingQuittance}Generation...{:else}+ Generer une quittance{/if}
                         </button>
                     </div>
@@ -589,6 +804,14 @@
                                     >
                                         ✉
                                     </button>
+                                    <button
+                                        class="btn btn-ghost btn-xs"
+                                        title="Valider payee"
+                                        onclick={() => markAsPaid(q.id)}
+                                        disabled={q.id ? Boolean(isMarkingPaidById[q.id]) || isStatusPayee(q.statut) : true}
+                                    >
+                                        ✓
+                                    </button>
                                 </td>
                             </tr>
                             {:else}
@@ -623,4 +846,21 @@
     message="Cette action est irreversible. Voulez-vous vraiment supprimer cette propriete ?"
     on:close={closeDeleteModal}
     on:confirm={deleteProperty}
+/>
+
+<GenerateQuittanceModal
+    open={showGenerateModal}
+    isSubmitting={isGeneratingQuittance}
+    proprio={currentProprio}
+    locataire={selectedPropriete?.locataire ?? null}
+    propriete={selectedPropriete ? {
+        adresse: selectedPropriete.adresse,
+        ville: selectedPropriete.ville,
+        loyer: Number(selectedPropriete.loyer ?? 0),
+        charges: Number(selectedPropriete.charges ?? 0)
+    } : null}
+    defaultPeriod={currentPeriodLabel()}
+    defaultDate={currentDateLabel()}
+    on:close={closeGenerateModal}
+    on:confirm={handleGenerateModalConfirm}
 />
