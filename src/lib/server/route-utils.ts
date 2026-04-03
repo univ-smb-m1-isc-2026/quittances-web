@@ -1,5 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
 import { apiUrl } from '$lib/server/api';
+import { dev } from '$app/environment';
 
 export type ApiEnvelope<T> = { data: T; state: string };
 type ServerFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -27,7 +28,7 @@ export function setAuthCookie(cookies: Cookies, token: string): void {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: false,
+		secure: !dev,
 		maxAge: 60 * 60 * 24
 	});
 }
