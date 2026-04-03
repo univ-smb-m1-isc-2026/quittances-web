@@ -106,7 +106,7 @@
     }
 </script>
 
-<div class="p-6">
+<div class="p-6 m-6 border border-gray-300 rounded-lg bg-base-100 shadow-md bg-base-300">
     <div class="mb-6">
         <h1 class="text-3xl font-bold">Générer une quittance de loyer</h1>
         <p class="text-base-content/60 mt-1">Remplissez les informations ci-dessous puis cliquez sur Générer.</p>
@@ -271,7 +271,7 @@
         </div><!-- end form column -->
 
         <!-- ── Prévisualisation ────────────────────────────────────── -->
-        <aside class="w-[420px] shrink-0 sticky top-6 hidden lg:block">
+        <aside class="w-[420px] shrink-0 sticky top-18 hidden lg:block">
             <div class="text-sm font-semibold text-base-content/50 uppercase tracking-wider mb-2">Prévisualisation</div>
             <QuittancePreview data={previewData} />
         </aside>

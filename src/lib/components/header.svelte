@@ -27,37 +27,25 @@
 		</a>
 
 		<!-- Colonne centrale -->
-		<div class="grid grid-cols-3 items-center justify-center text-center">
-			<div class="border-l-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
-			<div class="border-x-1 border-gray-400"><a href={resolve('/pricing')}>Tarifs</a></div>
-			<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
-		</div>
+		{#if isAuthenticated}
+			<div class="grid grid-cols-3 items-center justify-center text-center">
+				<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/dashboard')}>Dashboard</a></div>
+				<div class="border-l-1 border-r-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
+				<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
+			</div>
+		{:else}
+			<div class="grid grid-cols-3 items-center justify-center text-center">
+				<div class="border-l-1 border-gray-400"><a href={resolve('/documentation')}>Documentation</a></div>
+				<div class="border-x-1 border-gray-400"><a href={resolve('/pricing')}>Tarifs</a></div>
+				<div class="border-r-1 border-gray-400"><a href={resolve('/contact')}>Contact</a></div>
+			</div>
+		{/if}
 
 		<!-- Colonne droite -->
 		<div class="flex-none gap-2 flex justify-end">
 		
 			{#if isAuthenticated}
-				<a href={resolve('/dashboard')} class="btn btn-ghost btn-sm">Dashboard</a>
-				<div class="dropdown dropdown-end">
-					<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-						<div class="w-10 rounded-full ring ring-primary/25 ring-offset-base-100 ring-offset-2">
-							<img
-								alt="Avatar utilisateur"
-								src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-							/>
-						</div>
-					</div>
-					<ul
-						tabindex="-1"
-						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-56 p-2 shadow"
-					>
-						<li><a href={resolve('/dashboard')}>Mon dashboard</a></li>
-						<li><a href={resolve('/dashboard/generator')}>Generer une quittance</a></li>
-						<li>
-							<button type="button" onclick={handleLogout}>Se deconnecter</button>
-						</li>
-					</ul>
-				</div>
+				<button class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors" onclick={handleLogout}>Se deconnecter</button>
 			{:else}
 				<a href={resolve('/register')} class="border-1 border-gray-400 text-gray-400 py-1 px-2 rounded-md font-semibold hover:bg-gray-400 hover:text-base-100 transition-colors">Inscription</a>
 				<a href={resolve('/login')} class="bg-primary py-1 px-2 text-primary-content rounded-md font-semibold hover:bg-primary/70 transition-colors">Connexion</a>

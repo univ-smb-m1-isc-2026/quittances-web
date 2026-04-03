@@ -42,7 +42,8 @@
     let loyer = $state('');
     let charges = $state('');
     let dureeBail = $state('');
-    let periodicite = $state('');
+    let periodicitePreset = $state('1');
+    let periodiciteCustom = $state('');
     let infosComplementaires = $state('');
     let image = $state('');
     let idLocataire = $state('');
@@ -70,7 +71,8 @@
         loyer = '';
         charges = '';
         dureeBail = '';
-        periodicite = '';
+        periodicitePreset = '1';
+        periodiciteCustom = '';
         infosComplementaires = '';
         image = '';
         idLocataire = '';
@@ -128,6 +130,17 @@
             return;
         }
 
+        if (periodicitePreset === 'custom' && (!periodiciteCustom || Number(periodiciteCustom) <= 0)) {
+            createError = 'Merci de renseigner une periodicite personnalisee valide.';
+            return;
+        }
+
+        const periodiciteValue = periodicitePreset === 'custom' ? Number(periodiciteCustom) : Number(periodicitePreset);
+        if (!periodiciteValue || periodiciteValue <= 0) {
+            createError = 'La periodicite est obligatoire.';
+            return;
+        }
+
         if (locataireList.length === 0) {
             createError = 'Aucun locataire disponible. Créez d\'abord un locataire.';
             return;
@@ -153,7 +166,7 @@
                     loyer: Number(loyer),
                     charges: Number(charges),
                     dureeBail: Number(dureeBail),
-                    periodicite: periodicite ? Number(periodicite) : null,
+                    periodicite: periodiciteValue,
                     infosComplementaires: infosComplementaires ? infosComplementaires.trim() : null,
                     image: image ? image.trim() : null,
                     idLocataire: Number(idLocataire)
@@ -245,8 +258,25 @@
         </label>
 
         <label class="form-control w-full">
-            <span class="label-text">Périodicité (optionnel)</span>
-            <input type="number" min="1" step="1" class="input input-bordered" bind:value={periodicite} />
+            <span class="label-text">Periodicite d'envoi</span>
+            <select class="select select-bordered" bind:value={periodicitePreset} required>
+                <option value="1">Mensuel (1 mois)</option>
+                <option value="3">Trimestriel (3 mois)</option>
+                <option value="6">Semestriel (6 mois)</option>
+                <option value="12">Annuel (12 mois)</option>
+                <option value="custom">Personnalise (X mois)</option>
+            </select>
+            {#if periodicitePreset === 'custom'}
+                <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="input input-bordered mt-2"
+                    bind:value={periodiciteCustom}
+                    placeholder="Nombre de mois"
+                    required
+                />
+            {/if}
         </label>
 
         <label class="form-control w-full md:col-span-2">
