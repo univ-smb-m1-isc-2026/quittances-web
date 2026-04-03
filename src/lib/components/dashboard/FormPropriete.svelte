@@ -96,7 +96,17 @@
         loyer = String(current.loyer ?? '');
         charges = String(current.charges ?? '');
         dureeBail = String(current.dureeBail ?? '');
-        periodicite = current.periodicite == null ? '' : String(current.periodicite);
+        const periodiciteValue = current.periodicite == null ? '' : String(current.periodicite);
+        if (['1', '3', '6', '12'].includes(periodiciteValue)) {
+            periodicitePreset = periodiciteValue;
+            periodiciteCustom = '';
+        } else if (periodiciteValue) {
+            periodicitePreset = 'custom';
+            periodiciteCustom = periodiciteValue;
+        } else {
+            periodicitePreset = '1';
+            periodiciteCustom = '';
+        }
         infosComplementaires = String(current.infosComplementaires ?? '');
         image = String(current.image ?? '');
         idLocataire = current.idLocataire == null ? '' : String(current.idLocataire);
@@ -169,13 +179,13 @@
         }
 
         if (periodicitePreset === 'custom' && (!periodiciteCustom || Number(periodiciteCustom) <= 0)) {
-            createError = 'Merci de renseigner une periodicite personnalisee valide.';
+            formError = 'Merci de renseigner une periodicite personnalisee valide.';
             return;
         }
 
         const periodiciteValue = periodicitePreset === 'custom' ? Number(periodiciteCustom) : Number(periodicitePreset);
         if (!periodiciteValue || periodiciteValue <= 0) {
-            createError = 'La periodicite est obligatoire.';
+            formError = 'La periodicite est obligatoire.';
             return;
         }
 
@@ -207,7 +217,7 @@
                 loyer: Number(loyer),
                 charges: Number(charges),
                 dureeBail: Number(dureeBail),
-                periodicite: periodicite ? Number(periodicite) : null,
+                periodicite: periodiciteValue,
                 infosComplementaires: infosComplementaires ? infosComplementaires.trim() : null,
                 image: image ? image.trim() : null,
                 idLocataire: Number(idLocataire)
@@ -216,20 +226,7 @@
             const response = await fetch('/dashboard/proprietes', {
                 method: isEditMode ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    adresse: adresse.trim(),
-                    ville: ville.trim(),
-                    pays: pays.trim(),
-                    surfaceM2: Number(surfaceM2),
-                    type: String(type).trim().toUpperCase(),
-                    loyer: Number(loyer),
-                    charges: Number(charges),
-                    dureeBail: Number(dureeBail),
-                    periodicite: periodiciteValue,
-                    infosComplementaires: infosComplementaires ? infosComplementaires.trim() : null,
-                    image: image ? image.trim() : null,
-                    idLocataire: Number(idLocataire)
-                })
+                body: JSON.stringify(body)
             });
 
             const payload = await response.json() as ApiEnvelope<Propriete | null>;
